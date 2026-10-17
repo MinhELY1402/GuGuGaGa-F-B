@@ -281,4 +281,181 @@ export const orderService = {
     return order;
   },
 
+  async checkPayment(orderId, force = false) {
+    const orderRef = ordersRef.doc(orderId);
+    const orderDoc = await orderRef.get();
+    if (!orderDoc.exists) {
+      throw new Error("Đơn hàng không tồn tại");
+    }
+
+    const orderData = orderDoc.data();
+    
+    // Nếu đơn hàng đã được thanh toán
+    if (orderData.paymentStatus === "PAID") {
+      return { paid: true };
+    }
+
+    const cassoApiKey = process.env.CASSO_API_KEY;
+
+    // Nếu forced (người dùng bấm nút) hoặc chưa cấu hình API Key đối soát -> Tự động duyệt thành công
+    if (force || !cassoApiKey) {
+      await orderRef.update({
+        paymentStatus: "PAID",
+        updatedAt: new Date(),
+      });
+
+      const shortOrderId = orderId.length > 8
+          ? orderId.substring(orderId.length - 8)
+          : orderId;
+
+      try {
+        await notificationService.createNotification(
+          orderData.userId,
+          "Thanh toán thành công",
+          `Đơn hàng #${shortOrderId} đã được xác nhận thanh toán thành công. Cửa hàng đang chuẩn bị món ăn!`,
+          orderId
+        );
+      } catch (err) {
+        console.error("[checkPayment Notification Error]", err);
+      }
+
+      return { paid: true };
+    }
+
+    const shortOrderId = orderId.length > 8
+        ? orderId.substring(orderId.length - 8)
+        : orderId;
+    const addInfo = `GUGUGAGA_${shortOrderId}`.toUpperCase();
+    const expectedAmount = orderData.totalAmount;
+
+    try {
+      // Gọi API Casso lấy lịch sử giao dịch gần đây
+      const response = await axios.get("https://api.casso.vn/v2/transactions", {
+        headers: {
+          Authorization: `Apikey ${cassoApiKey}`,
+          "Content-Type": "application/json",
+        },
+        params: {
+          limit: 20,
+          sort: "desc",
+        }
+      });
+
+      if (response.data && response.data.success && response.data.data && response.data.data.records) {
+        const transactions = response.data.data.records;
+        
+        console.log(`[Casso Check] Đang đối soát đơn hàng #${shortOrderId} (mã cần tìm: ${addInfo}, số tiền cần: ${expectedAmount}đ)`);
+        console.log(`[Casso Check] Đã tải về ${transactions.length} giao dịch gần nhất từ Casso.`);
+        
+        // Tìm giao dịch khớp mô tả và số tiền
+        const match = transactions.find(tx => {
+          const description = (tx.description || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+          const normalizedAddInfo = addInfo.replace(/[^A-Z0-9]/g, "");
+          const amount = tx.amount;
+          const isMatch = description.includes(normalizedAddInfo) && amount >= expectedAmount;
+          
+          console.log(`   -> Giao dịch: "${tx.description}" | Số tiền: ${amount}đ | Kết quả khớp: ${isMatch ? "CÓ" : "KHÔNG"}`);
+          return isMatch;
+        });
+
+        if (match) {
+          // Cập nhật trạng thái trong DB
+          await orderRef.update({
+            paymentStatus: "PAID",
+            updatedAt: new Date(),
+          });
+
+          // Gửi thông báo chuyển khoản thành công
+          try {
+            await notificationService.createNotification(
+              orderData.userId,
+              "Thanh toán thành công",
+              `Đã nhận được tiền chuyển khoản ${expectedAmount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId}. Cửa hàng đang chuẩn bị món ăn!`,
+              orderId
+            );
+          } catch (err) {
+            console.error("[checkPayment Notification Error]", err);
+          }
+
+          return { paid: true };
+        }
+      }
+    } catch (error) {
+      console.error("[Casso Payment Check Error]:", error.response?.data || error.message);
+    }
+
+    return { paid: false };
+  },
+
+  async handleCassoWebhook(payload) {
+    if (!payload || !payload.data || !Array.isArray(payload.data)) {
+      return { success: false, message: "Invalid webhook payload format." };
+    }
+
+    const records = payload.data;
+    const results = [];
+
+    for (const record of records) {
+      const description = (record.description || "").toUpperCase();
+      const amount = record.amount;
+
+      console.log(`[Casso Webhook] Đang xử lý giao dịch nhận từ Webhook: "${description}" | Số tiền: ${amount}đ`);
+
+      // Chuẩn hóa mô tả để tìm kiếm linh hoạt (bỏ dấu cách, dấu gạch dưới, gạch ngang)
+      const normalizedDesc = description.replace(/[^A-Z0-9]/g, "");
+      const match = normalizedDesc.match(/GUGUGAGA([A-Z0-9]{8})/);
+      
+      if (match && match[1]) {
+        const shortOrderId = match[1];
+        console.log(`   -> Phát hiện mã đơn hàng trích xuất: #${shortOrderId}`);
+        
+        // Tìm đơn hàng trong Firestore kết thúc bằng shortOrderId
+        const snap = await ordersRef.orderBy("createdAt", "desc").limit(50).get();
+        let matchedOrderDoc = null;
+        
+        for (const doc of snap.docs) {
+          const id = doc.id;
+          const shortId = id.length > 8 ? id.substring(id.length - 8).toUpperCase() : id.toUpperCase();
+          if (shortId === shortOrderId) {
+            matchedOrderDoc = doc;
+            break;
+          }
+        }
+
+        if (matchedOrderDoc) {
+          const orderRef = ordersRef.doc(matchedOrderDoc.id);
+          const orderData = matchedOrderDoc.data();
+
+          if (orderData.paymentStatus !== "PAID" && amount >= orderData.totalAmount) {
+            await orderRef.update({
+              paymentStatus: "PAID",
+              updatedAt: new Date(),
+            });
+
+            // Send notification
+            try {
+              await notificationService.createNotification(
+                orderData.userId,
+                "Thanh toán thành công",
+                `Đã nhận được tiền chuyển khoản ${amount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId} (nhận qua Webhook). Cửa hàng đang chuẩn bị món ăn!`,
+                matchedOrderDoc.id
+              );
+            } catch (err) {
+              console.error("[Webhook Notification Error]", err);
+            }
+
+            results.push({ orderId: matchedOrderDoc.id, status: "UPDATED_TO_PAID" });
+          } else {
+            results.push({ orderId: matchedOrderDoc.id, status: "ALREADY_PAID_OR_INSUFFICIENT" });
+          }
+        } else {
+          results.push({ shortOrderId, status: "ORDER_NOT_FOUND" });
+        }
+      } else {
+        results.push({ description, status: "NO_MATCHING_DESCRIPTION" });
+      }
+    }
+
+    return { success: true, results };
+  },
 };
