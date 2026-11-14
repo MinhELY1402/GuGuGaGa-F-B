@@ -1,3 +1,4 @@
+import { isValidCassoToken } from "../utils/casso.js";
 import { orderService } from "../services/order.service.js";
 import { cartService } from "../services/cart.service.js";
 import { ApiResponse } from "../configs/apiResponse.js";
@@ -159,6 +160,9 @@ export const orderController = {
     }
   },
   cassoWebhook: async (req, res) => {
+    if (!isValidCassoToken(req.headers)) {
+      return res.status(401).json({ success: false, message: "Unauthorized: invalid Casso secure token" });
+    }
     try {
       console.log("[Casso Webhook Received]:", JSON.stringify(req.body));
       const result = await orderService.handleCassoWebhook(req.body);

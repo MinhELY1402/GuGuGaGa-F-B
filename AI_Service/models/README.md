@@ -1,7 +1,7 @@
 # GIẢI THÍCH THƯ MỤC AI_SERVICE/MODELS
 ## THƯ MỤC LƯU TRỮ TRỌNG SỐ MÔ HÌNH HỌC SÂU (DEEP LEARNING MODEL WEIGHTS)
 
-Thư mục `AI_Service/models` là nơi lưu trữ trọng số đã qua huấn luyện của mô hình AI nhận diện món ăn. Hiện tại thư mục chứa một file duy nhất: **`food_classifier.pth`**.
+Thư mục `AI_Service/models` là nơi lưu trữ trọng số đã qua huấn luyện của mô hình AI nhận diện món ăn. File trọng số **`food_classifier.pth`** **không được commit vào repo** (file nhị phân). File cần được đính kèm vào GitHub Release hoặc Drive của nhóm; chạy `python evaluate.py --data-dir <dataset>` để sinh `models/eval_report.json` làm bằng chứng độ chính xác.
 
 ---
 

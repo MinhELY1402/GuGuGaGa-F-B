@@ -8,40 +8,58 @@ on:
 
 jobs:
   backend-test:
-    name: Backend Lint & Test
+    name: Backend Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./Backend
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-
-      - name: Install Dependencies
-        working-directory: ./Backend
-        run: npm ci || npm install
-
-      - name: Check Syntax & Run Tests
-        working-directory: ./Backend
-        run: |
-          node -e "console.log('Backend syntax check passed')"
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+      - run: npm ci
+      - name: Run unit & API tests
+        run: npm test
 
   admin-build:
     name: Admin Web Build
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install & Build Admin
+    defaults:
+      run:
         working-directory: ./Admin
-        run: |
-          npm ci || npm install
-          npm run build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Admin/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  flutter-check:
+    name: Flutter Analyze & Test (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [ "gugugaga", "gugugaga shipper" ]
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Create empty .env asset (secrets are not committed)
+        run: touch .env
+      - run: flutter pub get
+      - name: Analyze (fail on errors only)
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Widget tests
+        run: if [ -d test ]; then flutter test; else echo "No tests in this app"; fi

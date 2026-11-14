@@ -1,6 +1,7 @@
 import db from "../configs/firestore.js";
 import { notificationService } from "./notification.service.js";
 import axios from "axios";
+import { extractShortOrderId, toShortOrderId, shouldMarkPaid } from "../utils/casso.js";
 
 const ordersRef = db.collection("orders");
 const driversRef = db.collection("drivers");
@@ -401,12 +402,9 @@ export const orderService = {
 
       console.log(`[Casso Webhook] Đang xử lý giao dịch nhận từ Webhook: "${description}" | Số tiền: ${amount}đ`);
 
-      // Chuẩn hóa mô tả để tìm kiếm linh hoạt (bỏ dấu cách, dấu gạch dưới, gạch ngang)
-      const normalizedDesc = description.replace(/[^A-Z0-9]/g, "");
-      const match = normalizedDesc.match(/GUGUGAGA([A-Z0-9]{8})/);
-      
-      if (match && match[1]) {
-        const shortOrderId = match[1];
+      const shortOrderId = extractShortOrderId(description);
+
+      if (shortOrderId) {
         console.log(`   -> Phát hiện mã đơn hàng trích xuất: #${shortOrderId}`);
         
         // Tìm đơn hàng trong Firestore kết thúc bằng shortOrderId
@@ -414,9 +412,7 @@ export const orderService = {
         let matchedOrderDoc = null;
         
         for (const doc of snap.docs) {
-          const id = doc.id;
-          const shortId = id.length > 8 ? id.substring(id.length - 8).toUpperCase() : id.toUpperCase();
-          if (shortId === shortOrderId) {
+          if (toShortOrderId(doc.id) === shortOrderId) {
             matchedOrderDoc = doc;
             break;
           }
@@ -426,7 +422,7 @@ export const orderService = {
           const orderRef = ordersRef.doc(matchedOrderDoc.id);
           const orderData = matchedOrderDoc.data();
 
-          if (orderData.paymentStatus !== "PAID" && amount >= orderData.totalAmount) {
+          if (shouldMarkPaid(orderData, amount)) {
             await orderRef.update({
               paymentStatus: "PAID",
               updatedAt: new Date(),
