@@ -5,7 +5,7 @@
 **Dự án:** Hệ sinh thái GuGuGaGa  
 **Ngày khởi tạo yêu cầu:** 12/10/2026 (Tuần 8 — Sprint 2)  
 **Người đề xuất (Requester):** Võ Nhật Huy (Project Lead & QA Lead)  
-**Ban kiểm soát thay đổi (CCB):** Võ Nhật Huy, Nguyễn Minh Tiến, Nguyễn Gia Bảo, Nguyễn Minh  
+**Ban kiểm soát thay đổi (CCB):** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Gia Bảo, Nguyễn Minh  
 **Quyết định của CCB:** **APPROVED (Chấp thuận thực thi)**  
 
 ---
@@ -33,7 +33,7 @@ Ban CCB quyết định bổ sung giải pháp kỹ thuật chịu lỗi đa t�
 ### 3. Đánh giá tác động (Impact Analysis)
 * **Tác động tiến độ (Schedule Impact)**: Tăng thêm 2 ngày làm việc trong Tuần 8. Nhóm đã điều chỉnh bằng cách tận dụng thời gian rảnh của nhánh AI và Backend, không làm ảnh hưởng đến mốc kết thúc Sprint 2 (18/10/2026).
 * **Tác động chi phí (Cost Impact)**: 0 VNĐ (sử dụng tài nguyên API hiện có).
-* **Tác động chất lượng (Quality Impact)**: Nâng tỷ lệ xác nhận thanh toán thành công tức thì từ 78% lên **99.5%**, loại bỏ hoàn toàn rủi ro khách hàng huỷ đơn do trễ webhook.
+* **Tác động chất lượng (Quality Impact)**: Khách hàng không còn phụ thuộc hoàn toàn vào webhook: app tự kiểm tra mỗi 4–5 giây và có nút xác minh chủ động. *(Số liệu đo trước/sau: [CẦN BỔ SUNG nếu có log thật])*
 
 ---
 
@@ -41,9 +41,9 @@ Ban CCB quyết định bổ sung giải pháp kỹ thuật chịu lỗi đa t�
 
 | Thành viên CCB | Vai trò | Quyết định | Chữ ký xác nhận |
 |---|---|:---:|:---:|
-| **Võ Nhật Huy** | Project Lead / Chủ tịch CCB | **Chấp thuận** | *(Đã ký)* |
-| **Nguyễn Minh Tiến** | Technical Lead / Thành viên | **Chấp thuận** | *(Đã ký)* |
-| **Nguyễn Gia Bảo** | Backend Lead / Người thực thi BE | **Chấp thuận** | *(Đã ký)* |
-| **Nguyễn Minh** | Frontend Lead / Người thực thi UI | **Chấp thuận** | *(Đã ký)* |
+| **Võ Nhật Huy** | Project Lead / Chủ tịch CCB | **Chấp thuận** | [ký thật] |
+| **Trần Phan Minh Tiến** | Technical Lead / Thành viên | **Chấp thuận** | [ký thật] |
+| **Nguyễn Gia Bảo** | Backend Lead / Người thực thi BE | **Chấp thuận** | [ký thật] |
+| **Nguyễn Minh** | Frontend Lead / Người thực thi UI | **Chấp thuận** | [ký thật] |
 
-*Hồ sơ này được lưu trữ trong Kho bằng chứng dự án môn học Quản trị dự án phần mềm theo đúng tiêu chuẩn Cổng chân thực (Authenticity Gate).*
+*Bằng chứng kèm theo: [link tin nhắn/log sự cố webhook thật, biên bản họp CCB].*

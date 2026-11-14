@@ -5,3 +5,8 @@ node_modules/
 .flutter-plugins-dependencies
 chickengoo/
 build/
+
+# Build output & runtime uploads
+Admin/dist/
+Backend/uploads/
+__pycache__/

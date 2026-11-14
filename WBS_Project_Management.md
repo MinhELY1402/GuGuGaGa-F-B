@@ -80,16 +80,16 @@ graph TD
 | **1.3.6** | Flutter Customer: Camera AI Scan món & Chatbot AI | UI chụp/chọn ảnh gửi AI nhận diện; màn hình chatbot tư vấn thực đơn qua Gemini. | 2 tuần | 80h | **Could** | ❌ Không |
 | **1.4.1** | Flutter Shipper: Đăng nhập & Bật/Tắt trạng thái nhận đơn | Màn hình đăng nhập tài xế, chuyển đổi trạng thái sẵn sàng giao (Online/Offline). | 1 tuần | 40h | **Must** | ✅ Có |
 | **1.4.2** | Flutter Shipper: Tiếp nhận & Quản lý danh sách đơn hàng | Danh sách đơn chờ giao, xem tiền cước, địa chỉ lấy món và địa chỉ giao món. | 1.5 tuần | 60h | **Must** | ✅ Có |
-| **1.4.3** | Flutter Shipper: Tích hợp Mapbox dẫn đường (Routing) | Vẽ tuyến đường ngắn nhất từ quán đến nhà khách, hiển thị chỉ dẫn rẽ đường. | 1.5 tuần | 60h | **Should** | ✅ Có |
+| **1.4.3** | Flutter Shipper: Tích hợp Mapbox dẫn đường (Routing) | Vẽ tuyến đường ngắn nhất từ quán đến nhà khách, hiển thị chỉ dẫn rẽ đường. | 1.5 tuần | 60h | **Should** | ❌ Không |
 | **1.4.4** | Flutter Shipper: Xác nhận giao hàng & Thu tiền COD | Nút bấm chuyển trạng thái: Đã lấy món $\rightarrow$ Đang giao $\rightarrow$ Đã giao/Đã thu COD. | 1 tuần | 40h | **Must** | ✅ Có |
-| **1.5.1** | Admin Portal: Trang Dashboard tổng quan & Biểu đồ KPI | Biểu đồ doanh thu ngày/tuần/tháng (Recharts), đếm đơn mới, món bán chạy. | 1.5 tuần | 60h | **Should** | ✅ Có |
+| **1.5.1** | Admin Portal: Trang Dashboard tổng quan & Biểu đồ KPI | Biểu đồ doanh thu ngày/tuần/tháng (Recharts), đếm đơn mới, món bán chạy. | 1.5 tuần | 60h | **Should** | ❌ Không |
 | **1.5.2** | Admin Portal: Quản lý Thực đơn, Danh mục & Chi nhánh | Bảng dữ liệu (Datatable) thêm/sửa/xóa sản phẩm, trạng thái hết hàng, ảnh món ăn. | 1.5 tuần | 60h | **Must** | ✅ Có |
 | **1.5.3** | Admin Portal: Quản lý Đơn hàng & Điều phối Shipper | Danh sách đơn toàn hệ thống, gán tài xế thủ công hoặc hủy đơn sai sót. | 1.5 tuần | 60h | **Must** | ✅ Có |
 | **1.5.4** | Admin Portal: Quản lý Tài khoản & Phân quyền Shipper | Danh sách khách hàng, duyệt tài xế mới, khóa tài khoản vi phạm. | 1 tuần | 40h | **Should** | ❌ Không |
-| **1.6.1** | AI Service: Thu thập & Tiền xử lý Dataset 30 món ăn | Gom 25.000 ảnh từ Kaggle, phân chia Train/Val/Test, tăng cường ảnh (Augmentation). | 1.5 tuần | 60h | **Could** | ✅ Có |
+| **1.6.1** | AI Service: Thu thập & Tiền xử lý Dataset 30 món ăn | Gom 25.000 ảnh từ Kaggle, phân chia Train/Val/Test, tăng cường ảnh (Augmentation). | 1.5 tuần | 60h | **Could** | ❌ Không |
 | **1.6.2** | AI Service: Huấn luyện & Đánh giá MobileNetV2 | Transfer Learning trên PyTorch, tinh chỉnh blocks 14-18, lưu file `.pth` đạt Acc > 85%. | 2 tuần | 80h | **Could** | ❌ Không |
-| **1.6.3** | AI Service: Triển khai Flask REST API & Image Fallback | Endpoint `/predict`, chuẩn hóa tensor ảnh gửi lên, mapping nhãn vào menu Firestore. | 1 tuần | 40h | **Could** | ✅ Có |
-| **1.6.4** | AI Service: Tích hợp Gemini API tư vấn món ăn | Thiết lập Prompt system, format dữ liệu trả về món ăn khuyến nghị. | 1 tuần | 40h | **Won't** *(v2)*| ✅ Có |
+| **1.6.3** | AI Service: Triển khai Flask REST API & Image Fallback | Endpoint `/predict`, chuẩn hóa tensor ảnh gửi lên, mapping nhãn vào menu Firestore. | 1 tuần | 40h | **Could** | ❌ Không |
+| **1.6.4** | AI Service: Tích hợp Gemini API tư vấn món ăn | Thiết lập Prompt system, format dữ liệu trả về món ăn khuyến nghị. | 1 tuần | 40h | **Could** | ❌ Không |
 | **1.7.1** | Kiểm thử tích hợp hệ thống (Integration & E2E Testing)| Test liên thông: Khách đặt $\rightarrow$ Backend $\rightarrow$ Admin duyệt $\rightarrow$ Shipper giao. | 2 tuần | 80h | **Must** | ✅ Có |
 | **1.7.2** | Triển khai môi trường Production & Tối ưu bảo mật | Deploy Backend lên Cloud Run / VPS, cấu hình Domain, SSL HTTPS, Firestore Security. | 1 tuần | 40h | **Must** | ✅ Có |
 
@@ -98,16 +98,17 @@ graph TD
 ### Tổng kết tỷ lệ MoSCoW & Cấu trúc MVP
 
 * **Tổng số gói công việc lá (Work Packages)**: **27 gói**
-* **Tổng ước tính nỗ lực (Effort)**: **37.5 tuần** (~1.500 man-hours làm việc của team)
+* **Tổng ước tính nỗ lực (Effort)**: **1.480 man-hours** (tính lại từ bảng trên)
+* **Quy ước**: Cột "Thuộc MVP" = đúng nhóm Must-Have. Gói 1.6.4 (Gemini Chatbot) được xếp **Could** cho khớp `docs/03` và thực tế đã hiện thực; trợ lý giọng nói hai chiều nằm ngoài phạm vi (Out-of-Scope v2 trong Charter) nên không có gói WBS.
 
 | Nhóm MoSCoW | Số lượng gói | Tỷ lệ số gói (%) | Tổng số giờ | Tỷ lệ công sức (%) | Vai trò trong dự án |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Must-Have (MVP)** | **16 gói** | **59.3% (~60%)** | **880h** | **58.7% (~60%)** | **Bộ lõi bắt buộc để hệ thống vận hành và tạo ra doanh thu** (Khách đặt món, thanh toán, quán nhận đơn, tài xế giao hàng). |
-| **Should-Have** | **5 gói** | **18.5%** | **260h** | **17.3%** | Nâng cao trải nghiệm: Mapbox dẫn đường cho tài xế, theo dõi realtime, dashboard biểu đồ admin, review/feedback. |
-| **Could-Have** | **5 gói** | **18.5%** | **320h** | **21.3%** | Tính năng mở rộng giá trị gia tăng: Nhận diện ảnh món ăn qua camera bằng Deep Learning (MobileNetV2). |
-| **Won't-Have (Release sau)**| **1 gói** | **3.7%** | **40h** | **2.7%** | Trợ lý Chatbot AI đàm thoại hai chiều nâng cao (chuyển giao sang giai đoạn 2). |
+| **Must-Have (MVP)** | **17 gói** | **63.0%** | **920h** | **62.2%** | Bộ lõi để hệ thống vận hành: khách đặt món, thanh toán, quán nhận đơn, tài xế giao hàng, kiểm thử & triển khai. |
+| **Should-Have** | **5 gói** | **18.5%** | **260h** | **17.6%** | Nâng cao trải nghiệm: thông báo/review, theo dõi đơn, Mapbox dẫn đường, dashboard KPI, quản lý tài khoản. |
+| **Could-Have** | **5 gói** | **18.5%** | **300h** | **20.3%** | Giá trị gia tăng: Camera AI (dataset, MobileNetV2, Flask API) và Gemini Chatbot. |
+| **Won't-Have (v2)** | **0 gói** | **0%** | **0h** | **0%** | Trợ lý giọng nói, thanh toán quốc tế — ngoài phạm vi, ghi trong Charter. |
 
-> 📌 **Kết luận MoSCoW**: Nhóm **Must-Have chiếm chính xác 59.3% số gói và 58.7% công sức (đáp ứng đúng chuẩn ~60% yêu cầu của giáo viên)**. Nếu thời gian bị cắt giảm hoặc có sự cố, việc hoàn thành 16 gói Must-Have vẫn đảm bảo 100% nghiệp vụ bán đồ ăn trực tuyến.
+> 📌 **Kết luận MoSCoW**: Must-Have chiếm **63.0% số gói và 62.2% công sức**, sát mức ~60% yêu cầu. Nếu bị cắt giảm thời gian, hoàn thành 17 gói Must vẫn đảm bảo nghiệp vụ bán đồ ăn trực tuyến.
 
 ---
 
@@ -290,6 +291,8 @@ graph LR
 ---
 
 ## PHẦN 6: TIẾN ĐỘ THỰC HIỆN & BIỂU ĐỒ GANTT (GANTT CHART)
+
+> **Ghi chú:** Gantt dưới đây là **lịch ước tính ban đầu** dựng từ PERT (67,5 ngày làm việc, bắt đầu 05/09). Mốc thực tế của dự án (ĐACN1 từ 24/08, lập repo QTDA ngày 09/11, các mini-sprint QTDA) được ghi tại `docs/00_Project_History.md` và `docs/02_Project_Management_Plan.md`.
 
 Tiến độ được chia thành **4 Sprint** theo quy trình Agile/Scrum, tận dụng khả năng làm việc song song của 4 vị trí lập trình viên (Backend, Mobile App, Web Admin, AI Engineer):
 

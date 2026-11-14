@@ -9,7 +9,6 @@ import { config } from "../configs/env.js";
 export const protectRoute = async (req, res, next) => {
   try {
     let token;
-    console.log("ProtectRoute middleware called");
 
     // 1. Lấy token từ header Authorization: Bearer <token>
     if (req.headers.authorization?.startsWith("Bearer")) {

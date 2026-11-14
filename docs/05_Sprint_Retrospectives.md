@@ -1,4 +1,6 @@
 # BIÊN BẢN HỌP CẢI TIẾN QUY TRÌNH (SPRINT RETROSPECTIVES)
+
+> Ghi chú: Retro Sprint 1 thuộc giai đoạn ĐACN1 — nhóm cần đối chiếu nội dung với ghi chép/tin nhắn thật và đính kèm bằng chứng. Các retro của giai đoạn QTDA (sau 09/11) được ghi tiếp ở cuối file theo từng mini-sprint.
 ## DỰ ÁN GUGUGAGA (THEO MÔ HÌNH 4Ls: LIKED - LEARNED - LACKED - LONGED FOR)
 
 ---
@@ -8,13 +10,12 @@
 * **Thời gian:** 19:30 – 21:00, Thứ Bảy ngày 26/09/2026
 * **Địa điểm:** Google Meet & Bảng thảo luận nhóm
 * **Chủ trì (Scrum Master):** Võ Nhật Huy (Project Lead)
-* **Thành phần tham gia:** Võ Nhật Huy, Nguyễn Minh Tiến, Nguyễn Minh, Nguyễn Gia Bảo (Đầy đủ 4/4)
+* **Thành phần tham gia:** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Minh, Nguyễn Gia Bảo (Đầy đủ 4/4)
 
 ### Nội dung thảo luận theo mô hình 4Ls:
 1. **Liked (Những điểm làm tốt, đáng phát huy):**
    - Thiết lập Monorepo và Firestore Seeding rất nhanh nhờ sự chuẩn bị kỹ của Tiến và Bảo.
    - Minh nắm bắt cấu trúc widget Flutter tốt, hoàn thành màn hình Home và Menu đúng hạn.
-   - Nhóm duy trì tốt việc mở Pull Request, không ai push thẳng vào `main`.
 2. **Learned (Những bài học kinh nghiệm rút ra):**
    - Cần thống nhất cấu trúc Model JSON (`fromJson`, `toJson`) giữa Backend và Flutter ngay từ đầu để tránh lỗi ép kiểu `Null check operator used on a null value`.
    - Cấu hình Firebase Auth trên máy ảo Android cần file `google-services.json` đồng bộ với SHA-1.
@@ -37,7 +38,6 @@
 1. **Liked (Thành tựu lớn nhất của toàn dự án):**
    - Cả 5 phân hệ phần mềm chạy mượt mà, liên thông dữ liệu hoàn chỉnh 100%.
    - Xử lý thành công biến cố **Scope Change CR-01** (VietQR Polling) giúp hệ thống thanh toán đạt độ tin cậy tuyệt đối.
-   - Lịch sử Git thể hiện rõ ràng năng lực làm việc nhóm thực thụ, commit trải đều 12 tuần của 4 người.
 2. **Learned (Bài học quản trị quan trọng nhất):**
    - "Dự án thật luôn phát sinh rủi ro thật" — việc duy trì Bảng rủi ro và họp CCB kịp thời quan trọng hơn việc cố bám đuổi kế hoạch ban đầu một cách máy móc.
    - Tối ưu hóa mô hình AI: MobileNetV2 9.3MB là quyết định sáng suốt thay vì dùng ResNet hay VGG cồng kềnh.

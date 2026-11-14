@@ -11,7 +11,8 @@
     "start:src": "node src/server.js",
     "dev:legacy": "nodemon server.js",
     "start:legacy": "node server.js",
-    "seed": "node seed-firestore.js"
+    "seed": "node seed-firestore.js",
+    "test": "NODE_ENV=test node --test test/"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -29,6 +30,7 @@
     "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "supertest": "^7.3.2"
   }
 }

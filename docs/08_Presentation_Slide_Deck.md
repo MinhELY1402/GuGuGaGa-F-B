@@ -3,7 +3,7 @@
 
 **Hội đồng chấm thi:** TS. Nguyễn Thanh Tuấn & Các thầy cô Hội đồng Khoa Khoa học Máy tính  
 **Tên đề tài:** Hệ Sinh Thái Đặt Món Ăn Trực Tuyến Tích Hợp AI — GuGuGaGa  
-**Nhóm sinh viên (4 thành viên):** Võ Nhật Huy, Nguyễn Minh Tiến, Nguyễn Minh, Nguyễn Gia Bảo  
+**Nhóm sinh viên (4 thành viên):** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Minh, Nguyễn Gia Bảo  
 **Thời lượng phân bổ:** 6 phút thuyết trình Slide + 5 phút Live Demo + 5 phút Hội đồng Q&A  
 
 ---
@@ -11,11 +11,11 @@
 ### SLIDE 1: TRANG TIÊU ĐỀ & ĐỘI NGŨ DỰ ÁN
 * **Tiêu đề lớn**: HỆ SINH THÁI ĐẶT MÓN ĂN VIỆT NAM TÍCH HỢP TRÍ TUỆ NHÂN TẠO (GUGUGAGA)
 * **Sourcing Pathway**: Pathway 1 (Kế thừa / Song hành Đồ án chuyên ngành kỹ thuật)
-* **Cơ cấu tổ chức & Tỷ lệ đóng góp (4 thành viên)**:
-  - **Võ Nhật Huy**: Project Lead / Scrum Master & QA Lead (25%)
-  - **Nguyễn Minh Tiến**: Technical Lead & System Architect (25%)
-  - **Nguyễn Minh**: Frontend Engineer — Flutter & React (25%)
-  - **Nguyễn Gia Bảo**: Backend & AI Engineer — Node.js & PyTorch (25%)
+* **Cơ cấu tổ chức (4 thành viên)** — tỷ lệ đóng góp lấy theo GitHub Insights, xem báo cáo:
+  - **Võ Nhật Huy**: Project Lead / Scrum Master & QA Lead
+  - **Trần Phan Minh Tiến**: Technical Lead & System Architect
+  - **Nguyễn Minh**: Frontend Engineer — Flutter & React
+  - **Nguyễn Gia Bảo**: Backend & AI Engineer — Node.js & PyTorch
 
 ---
 
@@ -31,15 +31,14 @@
 
 ### SLIDE 3: KIẾN TRÚC HỆ THỐNG & CƠ CẤU PHÂN RÃ WBS (100% RULE)
 * **Sơ đồ kiến trúc 5 phân hệ**: Flutter Mobile (Khách & Shipper) $\rightarrow$ REST API (Node.js/Express) $\leftrightarrow$ Flask AI (PyTorch MobileNetV2) & Firebase Firestore.
-* **Quy tắc 100% Rule**: Bao quát toàn diện 27 gói công việc lá (1.500h nỗ lực).
-* **MoSCoW Sizing**: Must-Have chiếm chính xác **59.3% số gói và 58.7% công sức** (đáp ứng đúng chuẩn ~60% yêu cầu MVP).
+* **Quy tắc 100% Rule**: Bao quát toàn diện 27 gói công việc lá (1.480h nỗ lực).
+* **MoSCoW Sizing**: Must-Have chiếm **63.0% số gói và 62.2% công sức** (sát mức ~60% yêu cầu MVP).
 
 ---
 
 ### SLIDE 4: CHỈ SỐ THỰC THI & LỊCH TRÌNH ĐƯỜNG GĂNG (CPM & BURNDOWN)
 * **Chuỗi đường găng**: $\text{Start} \rightarrow A \rightarrow B \rightarrow D \rightarrow E \rightarrow G \rightarrow I \rightarrow L \rightarrow M \rightarrow \text{End}$ (67.5 ngày làm việc).
-* **Vận tốc Sprint (Velocity)**: Duy trì ổn định từ 30 đến 40 Story Points qua 4 Sprint.
-* **Lịch sử GitHub**: Lịch sử commit đều đặn suốt 12 tuần từ 24/08 đến 16/11 của cả 4 thành viên, 100% mã nguồn kiểm soát qua Pull Request.
+* **Lịch sử dự án**: Sản phẩm kế thừa từ ĐACN1 (từ 24/08); repo QTDA được tổ chức lại ngày 09/11/2026; từ đó mọi thay đổi đi qua PR có review và CI (xem `docs/00_Project_History.md`).
 
 ---
 
@@ -48,14 +47,14 @@
 * **Biện pháp giải quyết chuẩn QLDA**:
   - Ghi nhận rủi ro R01 (Mức Đỏ 15/25) trong Risk Register.
   - Ban CCB phê duyệt **Change Request CR-01**: Bổ sung endpoint `/check-payment`, kích hoạt polling 5 giây tại Client và nút *"Tôi đã chuyển khoản"*.
-  - Kết quả: Nâng tỷ lệ xác nhận tức thì lên 99.5%, xóa bỏ hoàn toàn rủi ro huỷ đơn.
+  - Kết quả: Khách không còn phải chờ webhook; có thể chủ động kiểm tra thanh toán. *(Số liệu đo: [CẦN BỔ SUNG])*
 
 ---
 
-### SLIDE 6: KẾT QUẢ NGHIỆM THU TỪ STAKEHOLDER THẬT (UAT SIGNOFF)
-* Nghiệm thu thực tế tại cơ sở Quán Ăn GuGuGaGa (Đà Nẵng).
-* 16/16 kịch bản UAT đều đạt **PASS** (Camera AI Scan, Chatbot Gemini, Thanh toán VietQR, Điều hướng Mapbox cho Shipper).
-* Biên bản nghiệm thu có chữ ký xác nhận của đại diện chủ cơ sở kinh doanh.
+### SLIDE 6: KẾT QUẢ NGHIỆM THU (UAT)
+* Địa điểm / người tham gia: [CẦN BỔ SUNG].
+* Kết quả UAT: [CẦN BỔ SUNG sau buổi UAT thật — số kịch bản PASS/FAIL, người tham gia].
+* Biên bản nghiệm thu: [đính kèm bản scan có chữ ký thật].
 
 ---
 
