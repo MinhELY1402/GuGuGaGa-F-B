@@ -70,7 +70,7 @@
 
 ### Gói 2: WBS 1.4.2 & 1.4.4 — Shipper Tiếp Nhận Đơn & Xác Nhận Thu COD
 * **Phân hệ**: Shipper Mobile App (`gugugaga shipper/lib/screens/`)
-* **Chủ trì**: Nguyễn Minh (Frontend) | **Phối hợp**: Nguyễn Minh Tiến (Tech Lead)
+* **Chủ trì**: Nguyễn Minh (Frontend) | **Phối hợp**: Trần Phan Minh Tiến (Tech Lead)
 * **Thời gian ước tính**: 80 giờ (2 tuần) | **Phân cấp MoSCoW**: **Must-Have**
 * **Mô tả công việc**:
   1. Xây dựng danh sách đơn hàng sẵn sàng nhận theo chi nhánh.
@@ -84,7 +84,7 @@
 
 ### Gói 3: WBS 1.6.2 & 1.6.3 — Huấn Luyện MobileNetV2 & Flask Inference API
 * **Phân hệ**: AI Service (`AI_Service/`)
-* **Chủ trì**: Nguyễn Gia Bảo (AI Engineer) | **Kiểm duyệt**: Nguyễn Minh Tiến
+* **Chủ trì**: Nguyễn Gia Bảo (AI Engineer) | **Kiểm duyệt**: Trần Phan Minh Tiến
 * **Thời gian ước tính**: 80 giờ (2 tuần) | **Phân cấp MoSCoW**: **Could-Have**
 * **Mô tả công việc**:
   1. Xây dựng pipeline Transfer Learning trên PyTorch với Backbone MobileNetV2 pretrained từ ImageNet.

@@ -3,7 +3,7 @@
 
 **Mã dự án:** `DA-QLDA-2026-GUGUGAGA`  
 **Học phần:** Quản Trị Dự Án Phần Mềm — VKU  
-**Ngày ban hành:** 24/08/2026 | **Ngày hoàn tất:** 16/11/2026  
+**Bắt đầu phát triển sản phẩm (ĐACN1):** 24/08/2026 | **Lập repo & khung QTDA:** 09/11/2026 | **Bảo vệ:** [ngày bảo vệ]  
 
 ---
 
@@ -12,6 +12,8 @@ Xây dựng giải pháp phần mềm hoàn chỉnh giúp các chuỗi cửa hà
 
 ### 2. Nguồn Gốc Đề Tài (Sourcing Pathway)
 * **Lựa chọn:** **Pathway 1 (Kế thừa / Song hành Đồ án chuyên ngành)**.
+* **Nguồn kế thừa:** Đồ án chuyên ngành 1 — GVHD: [CẦN BỔ SUNG]; bằng chứng: [link báo cáo/repo ĐACN1].
+* Lịch sử commit trước 09/11/2026 là lịch sử được tổ chức lại khi chuyển sản phẩm sang repo này (xem `docs/00_Project_History.md`).
 * Thiết lập khung quản trị dự án phần mềm chuyên nghiệp (WBS, PERT/CPM, Agile/Scrum, GitFlow, Gói bằng chứng kiểm soát) bao quanh đồ án chuyên ngành kỹ thuật.
 
 ### 3. Mục Tiêu Dự Án (Project Objectives)
@@ -50,7 +52,7 @@ Xây dựng giải pháp phần mềm hoàn chỉnh giúp các chuỗi cửa hà
 
 ### 10. Cơ Cấu Tổ Chức & Phân Công 4 Thành Viên
 1. **Võ Nhật Huy**: Project Lead / PM & QA Lead (Chịu trách nhiệm chung, phê duyệt PRs, lập Test Matrix).
-2. **Nguyễn Minh Tiến**: Technical Lead & System Architect (Kiến trúc hệ thống, Firestore Schema, CI/CD).
+2. **Trần Phan Minh Tiến**: Technical Lead & System Architect (Kiến trúc hệ thống, Firestore Schema, CI/CD).
 3. **Nguyễn Minh**: Frontend Engineer (Chịu trách nhiệm 2 Mobile Apps Flutter và Web Admin).
 4. **Nguyễn Gia Bảo**: Backend & AI Engineer (Chịu trách nhiệm Express API, VietQR, Casso và Flask AI).
 
@@ -63,5 +65,5 @@ Xây dựng giải pháp phần mềm hoàn chỉnh giúp các chuỗi cửa hà
 - Chi phí hạ tầng: 0 VNĐ (tận dụng Free Tier của Google Cloud Firebase, Cloudinary, Casso và Mapbox).
 
 ### 13. Ký Tên Phê Duyệt (Sign-off)
-- **Đại diện Nhóm (Project Lead)**: Võ Nhật Huy (Đã ký).
-- **Giảng viên phụ trách**: TS. Nguyễn Thanh Tuấn (Đã duyệt).
+- **Đại diện Nhóm (Project Lead)**: Võ Nhật Huy ([ký thật]).
+- **Giảng viên phụ trách**: TS. Nguyễn Thanh Tuấn ([chữ ký / xác nhận thật]).

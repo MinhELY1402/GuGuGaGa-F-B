@@ -1,127 +1,181 @@
-# BÁO CÁO TỔNG KẾT KỸ THUẬT ĐỒ ÁN QUẢN TRỊ DỰ ÁN PHẦN MỀM
-## HỆ SINH THÁI ĐẶT MÓN ĂN TRỰC TUYẾN TÍCH HỢP TRÍ TUỆ NHÂN TẠO — GUGUGAGA
+# BÁO CÁO TỔNG KẾT ĐỒ ÁN QUẢN TRỊ DỰ ÁN PHẦN MỀM
+## HỆ THỐNG ĐẶT MÓN ĂN TRỰC TUYẾN TÍCH HỢP AI — GUGUGAGA
 
-**Học phần:** Quản Trị Dự Án Phần Mềm (Software Project Management)  
-**Đơn vị:** Khoa Khoa học Máy tính — Trường Đại học Công nghệ Thông tin & Truyền thông Việt - Hàn (VKU)  
-**Giảng viên phụ trách:** TS. Nguyễn Thanh Tuấn  
-**Thời gian thực hiện:** 24/08/2026 – 16/11/2026 (12 tuần)  
-**Nhóm sinh viên thực hiện:**
-1. **Võ Nhật Huy** (Lead & QA Lead) — Mã SV: 23ITE... — Tỷ lệ đóng góp: 25%
-2. **Nguyễn Minh Tiến** (Technical Lead & System Architect) — Mã SV: 23ITE... — Tỷ lệ đóng góp: 25%
-3. **Nguyễn Minh** (Frontend Engineer) — Mã SV: 23ITE... — Tỷ lệ đóng góp: 25%
-4. **Nguyễn Gia Bảo** (Backend & AI Engineer) — Mã SV: 23ITE... — Tỷ lệ đóng góp: 25%
+**Học phần:** Quản trị Dự án Phần mềm — Khoa Khoa học Máy tính, VKU
+**Giảng viên:** TS. Nguyễn Thanh Tuấn
+**Nguồn đề tài:** Pathway 1 — kế thừa Đồ án chuyên ngành 1 (phát triển sản phẩm từ 24/08/2026)
+**Giai đoạn QTDA:** 09/11/2026 (lập repo & khung quản trị) → [ngày bảo vệ]
 
----
+| Thành viên | MSSV | Vai trò |
+|---|---|---|
+| Võ Nhật Huy | [MSSV] | Project Lead / Scrum Master & QA Lead |
+| Trần Phan Minh Tiến | [MSSV] | Technical Lead & System Architect |
+| Nguyễn Minh | [MSSV] | Frontend Engineer (Flutter, React) |
+| Nguyễn Gia Bảo | [MSSV] | Backend & AI Engineer |
 
-## CHƯƠNG 1: TỔNG QUAN DỰ ÁN & BỐI CẢNH NGHIỆP VỤ (EXECUTIVE SUMMARY & BUSINESS CASE)
-
-### 1.1. Bối cảnh thực tế & Đặt vấn đề
-Trong bối cảnh chuyển đổi số ngành dịch vụ ăn uống (F&B) tại Việt Nam, các mô hình đặt đồ ăn trực tuyến truyền thống thường gặp hai hạn chế lớn:
-1. **Tìm kiếm món ăn thụ động**: Khách hàng chỉ có thể tìm kiếm bằng từ khóa chính xác, gặp khó khăn khi muốn tìm lại món ăn Việt Nam truyền thống thông qua hình ảnh chụp ngoài đời thực hoặc khi cần tư vấn nhanh về khẩu vị, ngân sách.
-2. **Chi phí trung gian cao & Đối soát thanh toán thủ công**: Các cửa hàng F&B vừa và nhỏ chịu mức chiết khấu cao từ sàn thương mại (20–30%) và mất nhiều công sức xác minh thủ công các giao dịch chuyển khoản ngân hàng trong giờ cao điểm.
-
-### 1.2. Giải pháp phần mềm GuGuGaGa
-Nhóm đã lựa chọn **Pathway 1 (Kế thừa / Song hành Đồ án chuyên ngành)** theo Điều lệ dự án, thiết lập khung quản trị dự án chuyên nghiệp bao quanh sản phẩm phần mềm **GuGuGaGa**. Hệ thống bao gồm 5 phân hệ hoàn chỉnh:
-- **Khách hàng (Mobile Flutter)**: Đặt món, tìm món qua camera AI (MobileNetV2), tư vấn thực đơn qua Gemini AI Chatbot, thanh toán quét mã VietQR Napas247.
-- **Tài xế (Mobile Flutter)**: Nhận đơn, dẫn đường bằng Mapbox Directions API kết hợp dự phòng kép OSRM, gọi điện một chạm cho khách và xác nhận thu COD.
-- **Quản trị (Web React + Vite)**: Dashboard thống kê KPI doanh thu, quản lý danh mục, thực đơn, chi nhánh và điều phối tài xế.
-- **Máy chủ API (Node.js/Express + Firebase Firestore)**: Quản lý dữ liệu thời gian thực, xác thực JWT phân quyền 3 roles, tích hợp webhook đối soát số dư Casso.
-- **Dịch vụ AI (Python Flask + PyTorch)**: Nhận diện 30 món ăn Việt Nam với cơ chế ImageNet fallback tự động.
-
-### 1.3. Mục tiêu SMART của dự án
-- **Specific**: Xây dựng trọn vẹn 5 phân hệ hoạt động liên thông từ đặt hàng đến giao hàng thành công.
-- **Measurable**: Độ chính xác nhận diện AI $\ge 80\%$, thời gian đối soát webhook ngân hàng $\le 1.5$ giây, hoàn tất 100% 16 gói công việc Must-Have.
-- **Achievable**: Tận dụng Transfer Learning trên MobileNetV2 (~9.3MB) và dịch vụ Cloud Firestore không máy chủ để giảm thiểu chi phí vận hành.
-- **Relevant**: Đáp ứng bài toán bán đồ ăn thật cho đối tác quán ăn F&B tại Đà Nẵng.
-- **Time-bound**: Hoàn thành toàn diện trong 12 tuần (24/08/2026 – 16/11/2026).
+> Quy ước: mọi con số trong báo cáo đều có nguồn kiểm chứng đi kèm. Các mục `[CẦN BỔ SUNG]` chỉ được điền khi có số đo hoặc bằng chứng thật.
 
 ---
 
-## CHƯƠNG 2: PHƯƠNG PHÁP LUẬN & CƠ CẤU QUẢN TRỊ (METHODOLOGY & TEAM GOVERNANCE)
+## CHƯƠNG 1. TỔNG QUAN
 
-### 2.1. Lựa chọn phương pháp luận Agile/Scrum kết hợp Kanban
-Nhóm đã áp dụng phương pháp luận **Hybrid Agile**:
-- **Khung Scrum**: Chia tiến độ thành 4 Sprint (mỗi Sprint từ 2 đến 3 tuần) với đầy đủ các nghi thức: Sprint Planning, Daily Scrum 15 phút, Sprint Review và Sprint Retrospective.
-- **Bảng Kanban trên GitHub Projects**: Trực quan hóa luồng công việc qua 5 cột trạng thái: `Backlog` $\rightarrow$ `Ready` $\rightarrow$ `In Progress` $\rightarrow$ `In Review` $\rightarrow$ `Done`.
+### 1.1. Bài toán
+Quán ăn F&B vừa và nhỏ đang gặp hai vấn đề:
+- Phí sàn trung gian cao.
+- Đối soát chuyển khoản phải làm thủ công.
 
-### 2.2. Cơ cấu phân công vai trò (RACI Matrix)
-Nhóm đã phân công rõ ràng 4 vai trò kỹ thuật:
-- **Huy**: Project Lead / Scrum Master & QA Lead.
-- **Tiến**: Technical Lead & System Architect.
-- **Minh**: Frontend Engineer (Flutter & React).
-- **Bảo**: Backend & AI Engineer (Node.js & Python).
+Về phía khách hàng, rất khó tìm lại món ăn Việt truyền thống khi chỉ có ảnh chụp.
 
----
+### 1.2. Giải pháp — 5 phân hệ
+| Phân hệ | Chức năng chính | Công nghệ |
+|---|---|---|
+| Backend API | JWT 3 vai trò, menu/chi nhánh/combo, giỏ hàng, đơn hàng, VietQR + webhook Casso | Node.js, Express, Firestore |
+| App khách hàng | Đặt món, thanh toán VietQR/COD, camera AI, chatbot Gemini, đánh giá | Flutter |
+| App tài xế | Nhận đơn chống tranh chấp, dẫn đường Mapbox/OSRM, thu COD | Flutter |
+| Admin Web | Dashboard KPI, quản lý menu/đơn/tài xế | React, Vite |
+| AI Service | Nhận diện 30 món Việt, Top-3, fallback ImageNet | Flask, PyTorch MobileNetV2 |
 
-## CHƯƠNG 3: ĐƯỜNG CƠ SỞ PHẠM VI, WBS & TỪ ĐIỂN WBS (SCOPE BASELINE)
-
-### 3.1. Cây phân rã công việc WBS (Tuân thủ Quy tắc 100% Rule)
-Phạm vi dự án được phân rã thành 27 gói công việc lá (Leaf Work Packages) thuộc 7 nhánh chính:
-`1.1 Quản trị & Hạ tầng` $\rightarrow$ `1.2 Backend API & Database` $\rightarrow$ `1.3 Customer Mobile App` $\rightarrow$ `1.4 Shipper Mobile App` $\rightarrow$ `1.5 Admin Web Portal` $\rightarrow$ `1.6 AI & Chatbot Service` $\rightarrow$ `1.7 QA, Tích hợp & Triển khai`.
-
-### 3.2. Phân loại MoSCoW & Cấu trúc MVP
-- **Must-Have (MVP cốt lõi)**: 16 gói (chiếm 59.3% số gói, 880h nỗ lực, đạt chuẩn ~60% yêu cầu).
-- **Should-Have**: 5 gói (18.5% — Mapbox routing, review, dashboard KPI).
-- **Could-Have**: 5 gói (18.5% — AI Scan món ăn MobileNetV2, Receipt Scan).
-- **Won't-Have**: 1 gói (3.7% — Trợ lý đàm thoại giọng nói v2).
+### 1.3. Nguồn gốc & lịch sử dự án
+- Sản phẩm được phát triển từ 24/08/2026 trong ĐACN1.
+- Ngày 09/11/2026, nhóm chuyển mã nguồn sang repo `GuGuGaGa-F-B` và lập khung quản trị (issue, milestone, CI, template).
+- Lịch sử commit trước 09/11 là lịch sử được tổ chức lại. Repo không có PR tương ứng trên GitHub cho giai đoạn này.
+- Chi tiết và bằng chứng: `docs/00_Project_History.md`.
 
 ---
 
-## CHƯƠNG 4: ƯỚC LƯỢNG, LỊCH TRÌNH CPM & VẬN TỐC ĐỘI NGŨ (ESTIMATION, SCHEDULE & VELOCITY)
+## CHƯƠNG 2. PHƯƠNG PHÁP & TỔ CHỨC
 
-### 4.1. Phân tích đường găng (Critical Path Method - CPM)
-Dựa trên ước tính 3 điểm PERT ($T_e = \frac{O + 4M + P}{6}$), chuỗi đường găng được xác định:
-$$\mathbf{Start \rightarrow A \rightarrow B \rightarrow D \rightarrow E \rightarrow G \rightarrow I \rightarrow L \rightarrow M \rightarrow End}$$
-Tổng thời gian kỳ vọng là **67.5 ngày làm việc (~13.5 tuần)** với độ lệch chuẩn $\sigma = 2.62$ ngày. Nhóm đã tối ưu hóa các nhánh song song (AI và Admin) để đưa tiến độ thực tế về đúng **12 tuần (24/08 – 16/11)**.
-
-### 4.2. Vận tốc đội ngũ qua 4 Sprint (Velocity & Story Points)
-- **Sprint 1**: Kế hoạch 34 SP $\rightarrow$ Thực tế hoàn thành 32 SP (Velocity: 32 SP).
-- **Sprint 2**: Kế hoạch 42 SP $\rightarrow$ Thực tế hoàn thành 40 SP (Velocity: 40 SP).
-- **Sprint 3**: Kế hoạch 38 SP $\rightarrow$ Thực tế hoàn thành 38 SP (Velocity: 38 SP).
-- **Sprint 4**: Kế hoạch 30 SP $\rightarrow$ Thực tế hoàn thành 30 SP (Velocity: 30 SP).
+- **Phương pháp:** Scrum rút gọn + Kanban trên GitHub Projects. Giai đoạn QTDA chia thành 3 mini-sprint, mỗi sprint khoảng 5 ngày (`02_Project_Management_Plan.md` §2).
+- **RACI:** `WBS_Project_Management.md` Phần 4.
+- **Quy trình mã nguồn:** GitFlow. PR vào `develop` cần ≥ 1 reviewer khác tác giả và CI xanh.
 
 ---
 
-## CHƯƠNG 5: THỰC THI & KIỂM SOÁT CHẤT LƯỢNG (EXECUTION, TESTING & CI/CD)
+## CHƯƠNG 3. PHẠM VI — WBS & MoSCoW
 
-### 5.1. Kỷ luật mã nguồn & Phân tích GitHub Insights
-- 100% các dòng mã được đưa vào hệ thống thông qua Pull Request trên GitHub.
-- Tuân thủ quy chuẩn **Conventional Commits**: `feat(...)`, `fix(...)`, `docs(...)`, `test(...)`.
-- Lịch sử đóng góp trải đều cả 12 tuần của 4 thành viên (Huy, Tiến, Minh, Bảo), không có hiện tượng dump commit dồn cục cuối kỳ.
+- **WBS:** 7 nhánh, 27 gói lá, tổng ước lượng **1.480 giờ công**.
+- **MoSCoW** (tính lại ngày 14/11/2026 từ bảng WBS):
 
-### 5.2. Đường ống tự động hóa CI/CD (GitHub Actions)
-File `.github/workflows/ci.yml` tự động kích hoạt kiểm tra khi có PR vào nhánh `develop`:
-- Kiểm tra cú pháp (Linting) và chạy test backend Node.js.
-- Kiểm tra tính hợp lệ của phân tích mã nguồn Flutter (`flutter analyze`).
+| Nhóm | Số gói | % gói | Giờ | % công sức |
+|---|---:|---:|---:|---:|
+| Must (MVP) | 17 | 63,0% | 920 | 62,2% |
+| Should | 5 | 18,5% | 260 | 17,6% |
+| Could | 5 | 18,5% | 300 | 20,3% |
+| Won't | 0 | 0% | 0 | 0% |
 
-### 5.3. Định nghĩa hoàn thành (Definition of Done - DoD)
-Một task chỉ được kéo sang cột `Done` khi:
-1. Code đã vượt qua kiểm tra CI Actions tự động.
-2. Có ít nhất 01 thành viên khác trong nhóm duyệt code (Peer Review Approval).
-3. Đã viết kiểm thử và kiểm tra xác minh thực tế.
-4. Tài liệu hướng dẫn liên quan đã được cập nhật.
+- **Ngoài phạm vi (v2):** trợ lý giọng nói, thanh toán quốc tế.
+- **Từ điển WBS** cho 3 gói trọng yếu (1.2.4, 1.4.2/1.4.4, 1.6.2/1.6.3), kèm tiêu chí nghiệm thu định lượng: xem `03_WBS_and_WBS_Dictionary.md`.
 
 ---
 
-## CHƯƠNG 6: QUẢN TRỊ RỦI RO & KIỂM SOÁT THAY ĐỔI PHẠM VI (RISK & SCOPE CHANGE CONTROL)
+## CHƯƠNG 4. TIẾN ĐỘ
 
-### 6.1. Sự tiến hóa của Bảng theo dõi rủi ro (Risk Register Evolution)
-Nhóm đã nhận diện 6 rủi ro thực tế trong suốt dự án:
-- **R01 (Casso Webhook delay)**: Đánh giá ban đầu điểm 15/25 (Mức Đỏ) $\rightarrow$ Đã xử lý thành công bằng cơ chế Polling song song $\rightarrow$ Điểm giảm về 4/25 (Mức Xanh).
-- **R02 (Xung đột nhận đơn giữa tài xế)**: Điểm 16/25 (Mức Đỏ) $\rightarrow$ Khắc phục bằng Optimistic Locking và cờ trạng thái Firestore $\rightarrow$ Điểm giảm về 6/25 (Mức Xanh).
-- **R03 (AI nhận diện nhầm món)**: Khắc phục bằng Top-3 gợi ý và ImageNet Fallback.
+### 4.1. Ước lượng PERT/CPM (kế hoạch ban đầu)
+- Đường găng: Start → A → B → D → E → G → I → L → M → End.
+- Thời gian kỳ vọng: **67,5 ngày làm việc**, σ ≈ 2,62 ngày.
+- Xác suất hoàn thành trong 70 ngày ≈ 83%.
+- Chi tiết: `WBS_Project_Management.md` Phần 5.
 
-### 6.2. Hồ sơ xử lý thay đổi phạm vi thực tế (Approved Change Request CR-01)
-Vào tuần 8 (Sprint 2), nhóm đã đối mặt với biến cố thực tế: mạng chập chờn khiến Webhook Casso chậm đối soát 30–60 giây. Ban kiểm soát thay đổi (CCB) đã họp và phê duyệt **CR-01**: Bổ sung endpoint `/api/user/orders/:id/check-payment` và cơ chế Client Polling chu kỳ 5 giây, kèm nút *"Tôi đã chuyển khoản"* cho phép đối soát cưỡng bức ngay lập tức. Thay đổi này đã bảo vệ trải nghiệm khách hàng và giải quyết triệt để rủi ro thanh toán.
+### 4.2. Tiến độ thực tế
+| Giai đoạn | Thời gian | Kết quả |
+|---|---|---|
+| ĐACN1 | 24/08 → 09/11 | 5 phân hệ ở mức chức năng (xem `00_Project_History.md`) |
+| Lập repo QTDA | 09/11 | Repo, 25 issue, 3 milestone, CI, template |
+| QTDA-A | 14/11 → 19/11 | Khôi phục route backend, test thật, CI thật, re-baseline hồ sơ |
+| QTDA-B | 20/11 → 24/11 | [CẦN BỔ SUNG] |
+| QTDA-C | 25/11 → bảo vệ | [CẦN BỔ SUNG] |
+
+### 4.3. Velocity / Burndown
+Chỉ tính cho giai đoạn QTDA, lấy từ story point của các issue đã đóng có PR merge: [CẦN BỔ SUNG sau mỗi mini-sprint]. Giai đoạn ĐACN1 không ghi story point, nên báo cáo không nêu velocity cho giai đoạn này.
 
 ---
 
-## CHƯƠNG 7: NGHIỆM THU, ĐÓNG DỰ ÁN & BÀI HỌC KINH NGHIỆM (PROJECT CLOSURE & LESSONS LEARNED)
+## CHƯƠNG 5. CHI PHÍ & EVM
+- **Chi phí hạ tầng:** 0 VNĐ (dùng free tier).
+- **EVM giai đoạn QTDA** (định nghĩa tại `02_Project_Management_Plan.md` §3):
 
-### 7.1. Kết quả kiểm thử chấp nhận người dùng (UAT)
-Hệ thống đã được chạy thử nghiệm thực tế với sự tham gia của đối tác kinh doanh quán ăn. Toàn bộ 16 kịch bản UAT (từ quét camera AI, tư vấn thực đơn, thanh toán VietQR đến tài xế nhận đơn và dẫn đường Mapbox) đều đạt trạng thái **PASS**. Biên bản nghiệm thu đã được đại diện đối tác ký xác nhận.
+| Thời điểm | PV | EV | AC | SPI | CPI |
+|---|---|---|---|---|---|
+| Cuối QTDA-A | [ ] | [ ] | [ ] | [ ] | [ ] |
+| Cuối QTDA-B | [ ] | [ ] | [ ] | [ ] | [ ] |
+| Cuối QTDA-C | [ ] | [ ] | [ ] | [ ] | [ ] |
 
-### 7.2. Bài học kinh nghiệm xương máu (Top Lessons Learned)
-1. **Quản lý rủi ro từ bên thứ ba**: Luôn luôn chuẩn bị cơ chế dự phòng (Fallback) khi phụ thuộc vào dịch vụ bên ngoài (như cổng ngân hàng Casso hoặc API Mapbox).
-2. **Kỷ luật GitFlow và Pull Request**: Việc cấm push trực tiếp vào `main` và bắt buộc review code chéo đã giúp nhóm phát hiện sớm các lỗi xung đột dữ liệu Firestore và cú pháp trước khi merge.
-3. **Sức mạnh của mô hình AI nhẹ**: Việc tinh chỉnh MobileNetV2 với dung lượng chỉ 9.3MB giúp server khởi động nhanh và hoạt động bền bỉ trên máy chủ tài nguyên hạn chế.
+---
+
+## CHƯƠNG 6. CHẤT LƯỢNG & KIỂM THỬ
+
+### 6.1. Rà soát khi tổ chức lại repo (14/11/2026)
+| Phát hiện | Mức độ | Xử lý |
+|---|---|---|
+| Backend import `routes/user.route.js`, `routes/admin.route.js` không tồn tại, nên server không khởi động được | Nghiêm trọng | Dựng lại 2 file từ route con và đường dẫn API mà client gọi |
+| Test cũ chỉ kiểm tra hằng số; CI backend chỉ chạy `console.log` | Cao | Viết 16 test thật; CI chạy test |
+| Webhook Casso không kiểm tra `Secure-Token` (tiêu chí WBS 1.2.4) | Cao | Thêm kiểm tra qua `CASSO_SECURE_TOKEN` |
+| Thiếu file model và số đo accuracy AI | Trung bình | Thêm `AI_Service/evaluate.py` |
+
+### 6.2. Kết quả kiểm thử tự động (chạy ngày 14/11/2026)
+| Bộ kiểm thử | Kết quả |
+|---|---|
+| Backend `npm test`: 8 API test (supertest), 5 test đối soát Casso, 3 test phân quyền | **16/16 pass** |
+| Flutter `analyze` — app khách hàng | 0 error (27 info/warning) |
+| Flutter `analyze` — app tài xế | 0 error (21 info/warning) |
+| Flutter `test` — app tài xế (màn hình đăng nhập) | **1/1 pass** |
+| Admin `npm run build` | Build thành công |
+
+Các API test xác nhận:
+- Route khách hàng, admin và tài xế trả **401** khi thiếu token.
+- JWT sai chữ ký trả **401**.
+- Webhook sai `Secure-Token` trả **401**.
+- Webhook gửi lại lần 2 không cập nhật trạng thái lần nữa (idempotent).
+- Mã đơn được trích đúng từ nội dung chuyển khoản.
+
+**Chưa tự động hóa:** luồng E2E qua Firestore thật (đặt món → thanh toán → giao). Luồng này được kiểm bằng UAT (Chương 8).
+
+### 6.3. Tiêu chí nghiệm thu kỹ thuật
+| Tiêu chí | Ngưỡng | Kết quả |
+|---|---|---|
+| AI Top-1 / Top-3 (test set) | ≥ 80% / ≥ 92% | [CẦN BỔ SUNG từ `models/eval_report.json`] |
+| Kích thước model | ≤ 15 MB | [CẦN BỔ SUNG] |
+| Latency `/predict` (CPU, p95) | ≤ 500 ms | [CẦN BỔ SUNG] |
+| Webhook sai token → 401 | Bắt buộc | ✅ Đạt (test tự động) |
+| Webhook lặp lại không cập nhật lần 2 | Bắt buộc | ✅ Đạt (test tự động) |
+| Thời gian webhook cập nhật PAID | ≤ 1,5 s | [CẦN BỔ SUNG — đo thật] |
+
+---
+
+## CHƯƠNG 7. RỦI RO & THAY ĐỔI PHẠM VI
+
+- **Sổ rủi ro** (`04_Risk_Register_Evolution.md`):
+  - R01–R06 từ giai đoạn ĐACN1.
+  - Bổ sung R07–R10 cho giai đoạn QTDA: thời gian ngắn, model AI có thể chưa đạt ngưỡng, lộ token, lỗi thiếu route (đã xử lý).
+- **CR-01** (`06_Scope_Change_Control_Record.md`):
+  - Vấn đề: webhook Casso bị trễ.
+  - Giải pháp: thêm endpoint `GET /api/user/orders/:id/check-payment`, app tự polling và có nút "Tôi đã chuyển khoản".
+  - Mã nguồn: `order.service.js` (`checkPayment`) và màn hình thanh toán của app khách hàng.
+  - Số đo hiệu quả: [CẦN BỔ SUNG nếu có log].
+
+---
+
+## CHƯƠNG 8. NGHIỆM THU (UAT)
+- 7 kịch bản UAT đã chuẩn bị tại `07_Stakeholder_Acceptance_Signoff.md`.
+- Kết quả: [CẦN BỔ SUNG sau buổi UAT thật — ngày, người tham gia (ghi rõ khách thật hay nội bộ), số kịch bản PASS/FAIL, biên bản có chữ ký].
+
+---
+
+## CHƯƠNG 9. ĐÓNG GÓP THÀNH VIÊN
+Lấy từ GitHub Insights và danh sách PR của giai đoạn QTDA (sau 09/11), kèm mô tả vai trò trong ĐACN1:
+
+| Thành viên | PR tạo (QTDA) | PR review (QTDA) | Issue hoàn thành | Phần việc chính |
+|---|---:|---:|---:|---|
+| Võ Nhật Huy | [ ] | [ ] | [ ] | Quản lý dự án, QA, hồ sơ |
+| Trần Phan Minh Tiến | [ ] | [ ] | [ ] | Kiến trúc, CI, test backend, route |
+| Nguyễn Minh | [ ] | [ ] | [ ] | App Flutter, Admin web |
+| Nguyễn Gia Bảo | [ ] | [ ] | [ ] | Backend nghiệp vụ, AI |
+
+---
+
+## CHƯƠNG 10. BÀI HỌC KINH NGHIỆM
+1. **Hồ sơ phải kiểm chứng được.** Lúc tổ chức lại repo, nhóm phát hiện nhiều tuyên bố trong tài liệu không khớp với code và dữ liệu GitHub (MoSCoW tính sai, test và CI chỉ mang tính hình thức, route bị thiếu). Từ đó nhóm thống nhất mọi con số phải đi kèm nguồn đo.
+2. **CI phải kiểm tra thật.** Một pipeline "luôn xanh" mà không chạy test đã che mất lỗi server không khởi động được.
+3. **Dịch vụ bên thứ ba cần đường dự phòng.** Đó là lý do có CR-01: polling song song với webhook.
+4. **Kế thừa đồ án (Pathway 1) cần ghi nguồn gốc ngay từ đầu.** Như vậy hội đồng mới phân biệt được phần đã làm ở ĐACN1 với phần làm trong QTDA.
+5. **Bảo mật tài khoản.** Không chia sẻ token cá nhân. Mỗi thành viên commit bằng tài khoản của chính mình.
