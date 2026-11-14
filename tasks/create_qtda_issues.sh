@@ -14,7 +14,7 @@ DUE_C="${DUE_C:-2026-11-29}"
 # Tài khoản GitHub của các thành viên
 HUY="HuyVo117"; TIEN="JunCodera1"; MINH="MinhELY1402"; BAO="giabaoqh"
 
-run() { if [[ "${DRY_RUN:-0}" == 1 ]]; then printf '[dry-run] %q ' "$@"; echo; else "$@"; fi; }
+run() { if [[ "${DRY_RUN:-0}" == 1 ]]; then echo "[dry-run] $*" | head -c 160; echo; else "$@"; fi; }
 
 # ---------- Labels ----------
 label() { run gh label create "$1" -R "$REPO" --color "$2" --description "$3" --force >/dev/null; }
