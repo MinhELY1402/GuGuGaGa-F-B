@@ -48,11 +48,18 @@ until grep -q "All emulators ready" "$LOGS/emulator.log" 2>/dev/null; do
 done
 export FIRESTORE_EMULATOR_HOST="127.0.0.1:$EMU_PORT" FIREBASE_PROJECT_ID="$PROJECT_ID"
 
-# ---- 2. Seed dữ liệu mẫu lần đầu ----
-if [[ ! -f "$DATA/.seeded" ]]; then
-  echo "🌱 Nạp dữ liệu mẫu lần đầu..."
-  (cd "$ROOT/Backend" && node seed-firestore.js > "$LOGS/seed.log" 2>&1) && touch "$DATA/.seeded"
+# ---- 2. Seed dữ liệu mẫu khi chưa có bản lưu ----
+if [[ ${#IMPORT_ARGS[@]} -eq 0 ]]; then
+  echo "🌱 Chưa có dữ liệu lưu, nạp dữ liệu mẫu..."
+  (cd "$ROOT/Backend" && node seed-firestore.js > "$LOGS/seed.log" 2>&1)
 fi
+
+# Lưu dữ liệu emulator định kỳ (phòng khi máy tắt đột ngột, không kịp export-on-exit)
+( while sleep 600; do
+    (cd "$DATA" && npx -y firebase-tools@13 emulators:export "$DATA/firestore" --force \
+       --project "$PROJECT_ID" >> "$LOGS/export.log" 2>&1) || true
+  done ) &
+PIDS+=($!)
 
 # ---- 3. Backend ----
 [[ -d "$ROOT/Backend/node_modules" ]] || (cd "$ROOT/Backend" && npm ci)
