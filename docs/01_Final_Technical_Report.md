@@ -71,9 +71,9 @@ Về phía khách hàng, rất khó tìm lại món ăn Việt truyền thống 
 ## CHƯƠNG 4. TIẾN ĐỘ
 
 ### 4.1. Ước lượng PERT/CPM (kế hoạch ban đầu)
-- Đường găng: Start → A → B → D → E → G → I → L → M → End.
-- Thời gian kỳ vọng: **67,5 ngày làm việc**, σ ≈ 2,62 ngày.
-- Xác suất hoàn thành trong 70 ngày ≈ 83%.
+- Đường găng (đã đính chính 15/11, bản trước bỏ sót C): Start → A → B → C → D → E → G → I → L → M → End.
+- Thời gian kỳ vọng: **75 ngày làm việc (15 tuần)**, σ ≈ 2,75 ngày. Xác suất xong trong 12 tuần ≈ 0%.
+- Sau điều chỉnh mạng (C song song B, G không chờ E, kiểm thử liên tục, thêm N): **60 ngày (12 tuần)**, σ ≈ 2,79, xác suất ≈ 50%.
 - Chi tiết: `WBS_Project_Management.md` Phần 5.
 
 ### 4.2. Tiến độ thực tế
@@ -81,7 +81,7 @@ Về phía khách hàng, rất khó tìm lại món ăn Việt truyền thống 
 |---|---|---|
 | ĐACN1 | 24/08 → 09/11 | 5 phân hệ ở mức chức năng (xem `00_Project_History.md`) |
 | Lập repo QTDA | 09/11 | Repo, 25 issue, 3 milestone, CI, template |
-| QTDA-A | 14/11 → 19/11 | Khôi phục route backend, test thật, CI thật, re-baseline hồ sơ |
+| QTDA-A | 14/11 → 19/11 | Khôi phục route backend, test thật, CI thật, re-baseline hồ sơ. **15/11:** phát hành v1.1.0-beta (2 APK) và server demo; thử trên điện thoại thật, sửa 10 lỗi (mục 6.3) |
 | QTDA-B | 20/11 → 24/11 | [CẦN BỔ SUNG] |
 | QTDA-C | 25/11 → bảo vệ | [CẦN BỔ SUNG] |
 
@@ -112,10 +112,10 @@ Chỉ tính cho giai đoạn QTDA, lấy từ story point của các issue đã 
 | Webhook Casso không kiểm tra `Secure-Token` (tiêu chí WBS 1.2.4) | Cao | Thêm kiểm tra qua `CASSO_SECURE_TOKEN` |
 | Thiếu file model và số đo accuracy AI | Trung bình | Thêm `AI_Service/evaluate.py` |
 
-### 6.2. Kết quả kiểm thử tự động (chạy ngày 14/11/2026)
+### 6.2. Kết quả kiểm thử tự động (cập nhật 15/11/2026)
 | Bộ kiểm thử | Kết quả |
 |---|---|
-| Backend `npm test`: 8 API test (supertest), 5 test đối soát Casso, 3 test phân quyền | **16/16 pass** |
+| Backend `npm test`: 11 API test (supertest, gồm 3 test chatbot `/api/ai/chat`), 5 test đối soát Casso, 3 test phân quyền, 3 test nhận dạng loại ảnh | **22/22 pass** |
 | Flutter `analyze` — app khách hàng | 0 error (27 info/warning) |
 | Flutter `analyze` — app tài xế | 0 error (21 info/warning) |
 | Flutter `test` — app tài xế (màn hình đăng nhập) | **1/1 pass** |
@@ -130,7 +130,23 @@ Các API test xác nhận:
 
 **Chưa tự động hóa:** luồng E2E qua Firestore thật (đặt món → thanh toán → giao). Luồng này được kiểm bằng UAT (Chương 8).
 
-### 6.3. Tiêu chí nghiệm thu kỹ thuật
+**Kiểm thử luồng qua API thật (15/11/2026, backend + Firestore Emulator):** khách đăng nhập → tạo giỏ → đặt đơn chuyển khoản → webhook sai token bị từ chối (401) → webhook đúng chuyển đơn sang `PAID` → gửi lại webhook không cập nhật lần 2 → admin gán tài xế → tài xế giao (`DELIVERED`) → dashboard ghi nhận doanh thu, khách nhận đủ 4 thông báo. Tất cả các bước đều đúng.
+
+### 6.3. Kiểm thử thực tế trên điện thoại (bản v1.1.0-beta)
+Thử 2 APK trên điện thoại Android thật, kết nối server demo qua Cloudflare Tunnel. Các lỗi tìm được đều đã sửa và có trong release:
+
+| Lỗi | Nguyên nhân gốc | Cách sửa |
+|---|---|---|
+| App Khách hàng không mở được | Thiếu `MainActivity.kt` trong repo | Thêm file |
+| Ô địa chỉ giao hàng không tải xong; bản đồ xám | Không có key OpenCage và token Mapbox; code không xử lý lỗi | Dự phòng nhiều tầng: Mapbox → OSM/Nominatim → toạ độ |
+| Đăng nhập Google lỗi trên Android | `signInWithPopup` chỉ chạy trên web | Đăng nhập Google native, Firebase `guga-27d3f`, SHA-1 |
+| Quét AI đối soát lỗi | Thiếu key; ảnh không có Content-Type | Key đặt ở backend; nhận dạng loại ảnh |
+| Ảnh món không hiện; "Quán gần bạn" bấm không phản hồi | Dữ liệu mẫu thiếu ảnh; danh sách quán bịa ghi cứng | Ghép ảnh Cloudinary; hiển thị chi nhánh thật |
+| Key Gemini lộ trong repo và APK | Ghi cứng trong `ai_service.dart` | Chatbot gọi qua backend `/api/ai/chat` |
+
+Chi tiết: `00_Project_History.md` mục 5. Người thử, thiết bị và danh sách luồng đã chạy: [CẦN BỔ SUNG].
+
+### 6.4. Tiêu chí nghiệm thu kỹ thuật
 | Tiêu chí | Ngưỡng | Kết quả |
 |---|---|---|
 | AI Top-1 / Top-3 (test set) | ≥ 80% / ≥ 92% | [CẦN BỔ SUNG từ `models/eval_report.json`] |
@@ -138,6 +154,7 @@ Các API test xác nhận:
 | Latency `/predict` (CPU, p95) | ≤ 500 ms | [CẦN BỔ SUNG] |
 | Webhook sai token → 401 | Bắt buộc | ✅ Đạt (test tự động) |
 | Webhook lặp lại không cập nhật lần 2 | Bắt buộc | ✅ Đạt (test tự động) |
+| Không lộ key bí mật trong APK | Bắt buộc | ✅ Đạt: đã kiểm tra nội dung APK v1.1.0-beta, chỉ có token Mapbox public |
 | Thời gian webhook cập nhật PAID | ≤ 1,5 s | [CẦN BỔ SUNG — đo thật] |
 
 ---
@@ -147,6 +164,7 @@ Các API test xác nhận:
 - **Sổ rủi ro** (`04_Risk_Register_Evolution.md`):
   - R01–R06 từ giai đoạn ĐACN1.
   - Bổ sung R07–R10 cho giai đoạn QTDA: thời gian ngắn, model AI có thể chưa đạt ngưỡng, lộ token, lỗi thiếu route (đã xử lý).
+  - Cập nhật 15/11: **R06 (lộ secret) đã xảy ra thật** với key Gemini ghi cứng trong code; thêm R11 (server demo trên máy cá nhân, đã gây mất dữ liệu một lần) và R12 (đăng nhập Google phụ thuộc SHA-1).
 - **CR-01** (`06_Scope_Change_Control_Record.md`):
   - Vấn đề: webhook Casso bị trễ.
   - Giải pháp: thêm endpoint `GET /api/user/orders/:id/check-payment`, app tự polling và có nút "Tôi đã chuyển khoản".
@@ -157,6 +175,7 @@ Các API test xác nhận:
 
 ## CHƯƠNG 8. NGHIỆM THU (UAT)
 - 7 kịch bản UAT đã chuẩn bị tại `07_Stakeholder_Acceptance_Signoff.md`.
+- Bản dùng cho UAT: **v1.1.0-beta** ([Release](https://github.com/MinhELY1402/GuGuGaGa-F-B/releases/tag/v1.1.0-beta)), server demo chạy theo hướng dẫn trong README.
 - Kết quả: [CẦN BỔ SUNG sau buổi UAT thật — ngày, người tham gia (ghi rõ khách thật hay nội bộ), số kịch bản PASS/FAIL, biên bản có chữ ký].
 
 ---
@@ -179,3 +198,6 @@ Lấy từ GitHub Insights và danh sách PR của giai đoạn QTDA (sau 09/11)
 3. **Dịch vụ bên thứ ba cần đường dự phòng.** Đó là lý do có CR-01: polling song song với webhook.
 4. **Kế thừa đồ án (Pathway 1) cần ghi nguồn gốc ngay từ đầu.** Như vậy hội đồng mới phân biệt được phần đã làm ở ĐACN1 với phần làm trong QTDA.
 5. **Bảo mật tài khoản.** Không chia sẻ token cá nhân. Mỗi thành viên commit bằng tài khoản của chính mình.
+6. **Phải thử trên thiết bị thật.** Test tự động và `flutter analyze` đều xanh, nhưng app khách hàng vẫn không mở được vì thiếu `MainActivity`. Chỉ khi cài APK lên điện thoại, nhóm mới tìm ra 10 lỗi (mục 6.3).
+7. **Không nhúng secret vào app di động.** Mọi thứ trong APK đều có thể bị giải nén. Key bí mật phải nằm ở backend; app chỉ giữ token public, như Mapbox `pk.`.
+8. **Dữ liệu demo cũng cần sao lưu.** Một lần tắt server sai cách đã làm mất dữ liệu thử nghiệm. Quy trình khởi động và tắt phải được viết thành script và kiểm thử.
