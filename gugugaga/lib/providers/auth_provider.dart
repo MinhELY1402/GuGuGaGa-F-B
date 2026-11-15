@@ -1,3 +1,4 @@
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,11 +64,29 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> loginWithGoogle() async {
     try {
-      // Dùng Firebase Auth signInWithPopup trực tiếp (hoạt động tốt trên web)
-      final googleProvider = firebase_auth.GoogleAuthProvider();
-      googleProvider.addScope('email');
-
-      final userCredential = await firebase_auth.FirebaseAuth.instance.signInWithPopup(googleProvider);
+      final firebase_auth.UserCredential userCredential;
+      if (kIsWeb) {
+        // Web: popup đăng nhập của Firebase
+        final googleProvider = firebase_auth.GoogleAuthProvider();
+        googleProvider.addScope('email');
+        userCredential =
+            await firebase_auth.FirebaseAuth.instance.signInWithPopup(googleProvider);
+      } else {
+        // Android/iOS: chọn tài khoản Google native → credential → Firebase
+        final googleSignIn = GoogleSignIn(scopes: ['email']);
+        await googleSignIn.signOut(); // luôn hiện hộp chọn tài khoản
+        final googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          throw Exception('Bạn đã huỷ đăng nhập Google');
+        }
+        final googleAuth = await googleUser.authentication;
+        final credential = firebase_auth.GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+          accessToken: googleAuth.accessToken,
+        );
+        userCredential =
+            await firebase_auth.FirebaseAuth.instance.signInWithCredential(credential);
+      }
       final firebaseIdToken = await userCredential.user!.getIdToken();
 
       // Gửi ID Token lên Backend để nhận JWT
