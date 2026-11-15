@@ -77,6 +77,8 @@ fi
 PIDS+=($!)
 
 # ---- 3. Backend ----
+# Dừng backend chạy riêng (nếu từng hot-reload bằng unit gugugaga-backend) để không tranh cổng
+systemctl --user stop gugugaga-backend 2>/dev/null || true
 [[ -d "$ROOT/Backend/node_modules" ]] || (cd "$ROOT/Backend" && npm ci)
 echo "▶️  Backend (cổng $API_PORT)..."
 # JWT_SECRET, Cloudinary... đọc từ Backend/.env (nếu có)

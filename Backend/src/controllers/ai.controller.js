@@ -3,6 +3,7 @@ import axios from "axios";
 import FormData from "form-data";
 import db from "../configs/firestore.js";
 import { ApiResponse } from "../configs/apiResponse.js";
+import { detectImageMime } from "../utils/image-mime.js";
 
 const productsRef = db.collection("products");
 
@@ -66,7 +67,7 @@ export const aiController = {
       const form = new FormData();
       form.append("image", req.file.buffer, {
         filename: req.file.originalname || "image.jpg",
-        contentType: req.file.mimetype,
+        contentType: detectImageMime(req.file.buffer, req.file.mimetype, req.file.originalname),
       });
 
       const pythonResponse = await axios.post("http://localhost:8000/predict", form, {
@@ -137,7 +138,7 @@ export const aiController = {
       const imagePart = {
         inlineData: {
           data: req.file.buffer.toString("base64"),
-          mimeType: req.file.mimetype
+          mimeType: detectImageMime(req.file.buffer, req.file.mimetype, req.file.originalname)
         }
       };
 
