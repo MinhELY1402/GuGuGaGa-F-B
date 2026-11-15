@@ -74,7 +74,8 @@ PIDS+=($!)
 # ---- 3. Backend ----
 [[ -d "$ROOT/Backend/node_modules" ]] || (cd "$ROOT/Backend" && npm ci)
 echo "▶️  Backend (cổng $API_PORT)..."
-(cd "$ROOT/Backend" && PORT="$API_PORT" JWT_SECRET="${JWT_SECRET:-gugugaga-demo-secret}" \
+# JWT_SECRET, Cloudinary... đọc từ Backend/.env (nếu có)
+(cd "$ROOT/Backend" && PORT="$API_PORT" \
    node src/server.js > "$LOGS/backend.log" 2>&1) &
 PIDS+=($!)
 until curl -sf "http://localhost:$API_PORT/health" >/dev/null; do sleep 1; done

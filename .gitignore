@@ -13,3 +13,8 @@ __pycache__/
 
 # Dữ liệu server demo local (emulator, log, URL tunnel)
 .demo-data/
+
+# Firebase service account (Admin SDK) — không bao giờ commit
+Backend/new-firebase.json
+Backend/serviceAccountKey.json
+**/*firebase*adminsdk*.json

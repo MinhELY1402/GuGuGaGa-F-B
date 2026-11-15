@@ -18,6 +18,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   final MapController _mapController = MapController();
   LatLng _currentCenter = const LatLng(10.762622, 106.660172); // Default: HCMC
   String _address = "Đang tải địa chỉ...";
+
   Timer? _debounce;
   bool _isLoading = false;
   TextEditingController _searchController = TextEditingController();
@@ -67,76 +68,159 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     _getAddressFromLatLng(_currentCenter);
   }
 
+  // Tra địa chỉ theo thứ tự: OpenCage (nếu có key) → Mapbox (nếu có token) → Nominatim (OpenStreetMap, miễn phí).
+  static const _osmHeaders = {
+    'User-Agent': 'GuGuGaGa/1.1 (VKU student project; com.example.GuGuGaGa)',
+  };
+
+  String _coordsText(LatLng p) =>
+      'Vị trí đã chọn (${p.latitude.toStringAsFixed(5)}, ${p.longitude.toStringAsFixed(5)})';
+
+  /// Trả về (địa chỉ, toạ độ) cho một truy vấn tìm kiếm, hoặc null nếu không thấy.
+  Future<(String, LatLng)?> _geocode(String query) async {
+    final key = AppConstants.openCageApiKey;
+    if (key.isNotEmpty) {
+      final res = await http
+          .get(Uri.parse('https://api.opencagedata.com/geocode/v1/json'
+              '?q=${Uri.encodeQueryComponent(query)}&key=$key&language=vi'))
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final r = json.decode(res.body)['results'];
+        if (r != null && r.isNotEmpty) {
+          return (
+            r[0]['formatted'] as String,
+            LatLng((r[0]['geometry']['lat'] as num).toDouble(),
+                (r[0]['geometry']['lng'] as num).toDouble())
+          );
+        }
+      }
+      return null;
+    }
+    final mapbox = AppConstants.mapboxAccessToken;
+    if (mapbox.isNotEmpty) {
+      final res = await http
+          .get(Uri.parse('https://api.mapbox.com/search/geocode/v6/forward'
+              '?q=${Uri.encodeQueryComponent(query)}&country=vn&language=vi&limit=1'
+              '&access_token=$mapbox'))
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final f = json.decode(res.body)['features'] as List?;
+        if (f != null && f.isNotEmpty) {
+          final c = f[0]['geometry']['coordinates'];
+          return (
+            (f[0]['properties']['full_address'] ?? f[0]['properties']['name']) as String,
+            LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble())
+          );
+        }
+        return null;
+      }
+      // Mapbox lỗi (hết hạn mức, token sai...) → thử Nominatim bên dưới
+    }
+    final res = await http
+        .get(
+            Uri.parse('https://nominatim.openstreetmap.org/search?format=jsonv2'
+                '&limit=1&countrycodes=vn&accept-language=vi'
+                '&q=${Uri.encodeQueryComponent(query)}'),
+            headers: _osmHeaders)
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) {
+      final r = json.decode(res.body) as List;
+      if (r.isNotEmpty) {
+        return (
+          r[0]['display_name'] as String,
+          LatLng(double.parse(r[0]['lat']), double.parse(r[0]['lon']))
+        );
+      }
+    }
+    return null;
+  }
+
+  Future<String?> _reverseGeocode(LatLng p) async {
+    final key = AppConstants.openCageApiKey;
+    if (key.isNotEmpty) {
+      final res = await http
+          .get(Uri.parse('https://api.opencagedata.com/geocode/v1/json'
+              '?q=${p.latitude}+${p.longitude}&key=$key&language=vi'))
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final r = json.decode(res.body)['results'];
+        if (r != null && r.isNotEmpty) return r[0]['formatted'] as String;
+      }
+      return null;
+    }
+    final mapbox = AppConstants.mapboxAccessToken;
+    if (mapbox.isNotEmpty) {
+      final res = await http
+          .get(Uri.parse('https://api.mapbox.com/search/geocode/v6/reverse'
+              '?longitude=${p.longitude}&latitude=${p.latitude}&language=vi'
+              '&access_token=$mapbox'))
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final f = json.decode(res.body)['features'] as List?;
+        if (f != null && f.isNotEmpty) {
+          return (f[0]['properties']['full_address'] ??
+              f[0]['properties']['name']) as String?;
+        }
+        return null;
+      }
+      // Mapbox lỗi → thử Nominatim bên dưới
+    }
+    final res = await http
+        .get(
+            Uri.parse('https://nominatim.openstreetmap.org/reverse?format=jsonv2'
+                '&lat=${p.latitude}&lon=${p.longitude}&accept-language=vi'),
+            headers: _osmHeaders)
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) {
+      return json.decode(res.body)['display_name'] as String?;
+    }
+    return null;
+  }
+
   Future<void> _getAddressFromLatLng(LatLng point) async {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () async {
+    // Nominatim giới hạn ~1 request/giây, nên chờ người dùng dừng kéo bản đồ.
+    _debounce = Timer(const Duration(milliseconds: 1000), () async {
+      if (mounted) setState(() => _isLoading = true);
+      String address;
+      try {
+        address = await _reverseGeocode(point) ?? _coordsText(point);
+      } catch (e) {
+        debugPrint('Error fetching address: $e');
+        address = _coordsText(point);
+      }
       if (mounted) {
         setState(() {
-          _isLoading = true;
+          _address = address;
+          _isLoading = false;
         });
-      }
-      try {
-        final url = Uri.parse(
-            'https://api.opencagedata.com/geocode/v1/json?q=${point.latitude}+${point.longitude}&key=${AppConstants.openCageApiKey}&language=vi');
-        final response = await http.get(url);
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          if (data['results'] != null && data['results'].isNotEmpty) {
-            if (mounted) {
-              setState(() {
-                _address = data['results'][0]['formatted'];
-              });
-            }
-          }
-        }
-      } catch (e) {
-        print('Error fetching address: $e');
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
     });
   }
 
   Future<void> _searchAddress(String query) async {
-    if (query.isEmpty) return;
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    if (query.trim().isEmpty) return;
+    if (mounted) setState(() => _isLoading = true);
     try {
-      final url = Uri.parse(
-          'https://api.opencagedata.com/geocode/v1/json?q=$query&key=${AppConstants.openCageApiKey}&language=vi');
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['results'] != null && data['results'].isNotEmpty) {
-          final result = data['results'][0];
-          final lat = result['geometry']['lat'];
-          final lng = result['geometry']['lng'];
-          final newPos = LatLng(lat, lng);
-          
-          if (mounted) {
-            setState(() {
-              _currentCenter = newPos;
-              _address = result['formatted'];
-            });
-          }
-          _mapController.move(newPos, 15);
+      final result = await _geocode(query.trim());
+      if (result != null) {
+        final (address, newPos) = result;
+        if (mounted) {
+          setState(() {
+            _currentCenter = newPos;
+            _address = address;
+          });
         }
+        _mapController.move(newPos, 15);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không tìm thấy địa chỉ, hãy thử từ khoá khác hoặc kéo bản đồ.')),
+        );
       }
     } catch (e) {
-      print('Error searching address: $e');
+      debugPrint('Error searching address: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -170,8 +254,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/256/{z}/{x}/{y}@2x?access_token=${AppConstants.mapboxAccessToken}',
+                urlTemplate: AppConstants.mapTileUrl,
                 userAgentPackageName: 'com.example.GuGuGaGa',
               ),
             ],
