@@ -33,8 +33,9 @@ Sản phẩm kế thừa từ Đồ án chuyên ngành 1 theo **Pathway 1** (xem
 ### Backend (cổng 5000)
 ```bash
 cd Backend
-cp .env.example .env          # điền JWT_SECRET, Firebase, Cloudinary, Casso...
+cp .env.example .env          # điền JWT_SECRET, Firebase, Cloudinary, Gemini, Casso... (xem chú thích trong file)
 # đặt serviceAccountKey.json (Firebase Admin SDK) theo FIREBASE_SERVICE_ACCOUNT_PATH
+# (hoặc chạy không cần service account: FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 — xem scripts/serve-demo.sh)
 npm install
 npm run seed                  # (tuỳ chọn) dữ liệu mẫu Firestore
 npm run dev
@@ -48,7 +49,8 @@ cd Admin && npm install && npm run dev     # gọi API tại http://localhost:50
 ### Mobile apps
 ```bash
 cd gugugaga            # hoặc "gugugaga shipper"
-# tạo file .env: BASE_URL=http://10.0.2.2:5000/api, MAPBOX_ACCESS_TOKEN=..., OPENCAGE_API_KEY=...
+# tạo file .env: BASE_URL=http://10.0.2.2:5000/api, MAPBOX_ACCESS_TOKEN=pk.... (token public, để trống thì dùng OpenStreetMap)
+# KHÔNG đặt key bí mật (Gemini, OpenCage...) vào .env của app: file này được đóng gói vào APK
 flutter pub get && flutter run
 ```
 
@@ -60,10 +62,28 @@ python app.py                                   # tự fallback ImageNet nếu c
 python evaluate.py --data-dir <dataset>         # đo Top-1/Top-3/latency → models/eval_report.json
 ```
 
+## Bản chạy thử (APK) cho người khác
+
+- **Tải APK:** [Releases → v1.1.0-beta](https://github.com/MinhELY1402/GuGuGaGa-F-B/releases/tag/v1.1.0-beta): `GuGuGaGa-KhachHang-*.apk`, `GuGuGaGa-TaiXe-*.apk` (Android 7.0+, arm64).
+- **Bật server demo trên máy nhóm** (Firestore Emulator + Backend + Cloudflare Quick Tunnel):
+  ```bash
+  # Cần Node 20+, JDK 21+, cloudflared. Dữ liệu demo lưu ở .demo-data/ (không commit).
+  bash scripts/serve-demo.sh                 # in ra URL https://xxxx.trycloudflare.com
+  # Hoặc chạy nền, không phụ thuộc terminal:
+  systemd-run --user --unit=gugugaga-demo --property=KillSignal=SIGINT --property=KillMode=mixed \
+    --property=TimeoutStopSec=120 --working-directory="$PWD" --setenv=PATH="$HOME/.local/bin:$PATH" \
+    bash scripts/serve-demo.sh
+  cat .demo-data/current-url.txt             # URL hiện tại
+  systemctl --user stop gugugaga-demo        # tắt (dữ liệu được lưu trước khi tắt)
+  ```
+- **URL tunnel đổi mỗi lần bật lại.** Trong app: lần đầu mở sẽ hỏi "Địa chỉ server"; muốn đổi sau đó thì **nhấn giữ chữ "GuGuGaGa"** ở màn hình đăng nhập.
+- **Tài khoản mẫu** (mật khẩu `123456`): khách `0912345671`, tài xế `0911111111`, admin `0900000000`.
+- **Đăng nhập Google (Android)** dùng project Firebase `guga-27d3f`. APK phải được ký bằng khoá có SHA-1 đã thêm vào Firebase (Project settings → app `com.example.GuGuGaGa` → Add fingerprint); build trên máy khác cần thêm SHA-1 của máy đó.
+
 ## Kiểm thử & CI
 
 ```bash
-cd Backend && npm test        # unit test + API test (supertest), không cần Firestore thật
+cd Backend && npm test        # 22 test: API (supertest), phân quyền, Casso, AI chat, nhận dạng ảnh — không cần Firestore thật
 ```
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) chạy trên mọi PR vào `develop`/`main`:

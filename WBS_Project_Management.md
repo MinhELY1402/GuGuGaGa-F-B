@@ -250,14 +250,23 @@ $$T_e = \frac{O + 4M + P}{6}, \quad \sigma^2 = \left(\frac{P - O}{6}\right)^2$$
 
 ### 2. Xác định Đường găng (Critical Path) & Thời gian dự án
 
+> **Đính chính (15/11/2026):** Bản trước ghi đường găng A→B→D→E→G→I→L→M (67,5 ngày), nhưng **bỏ sót C**. D phụ thuộc cả B và C, nên C cũng nằm trên đường găng. Số liệu dưới đây đã tính lại.
+
 * **Chuỗi đường găng (Critical Path)**:
-  $$\mathbf{Start \rightarrow A \rightarrow B \rightarrow D \rightarrow E \rightarrow G \rightarrow I \rightarrow L \rightarrow M \rightarrow End}$$
+  $$\mathbf{Start \rightarrow A \rightarrow B \rightarrow C \rightarrow D \rightarrow E \rightarrow G \rightarrow I \rightarrow L \rightarrow M \rightarrow End}$$
 * **Tổng thời gian thực hiện dự án kỳ vọng**:
-  $$T_{Project} = 10 + 7.5 + 10 + 7.5 + 12.5 + 5 + 10 + 5 = \mathbf{67.5 \text{ ngày làm việc}} \approx \mathbf{13.5 \text{ tuần}}$$
+  $$T_{Project} = 10 + 7.5 + 7.5 + 10 + 7.5 + 12.5 + 5 + 10 + 5 = \mathbf{75 \text{ ngày làm việc}} = \mathbf{15 \text{ tuần}}$$
 * **Độ lệch chuẩn của dự án**:
-  $$\sigma_{Project} = \sqrt{\sum \sigma_{Critical}^2} = \sqrt{1.00 + 0.69 + 1.00 + 0.69 + 2.25 + 0.11 + 1.00 + 0.11} = \sqrt{6.85} \approx \mathbf{2.62 \text{ ngày}}$$
-* **Xác suất hoàn thành trong vòng 14 tuần (70 ngày)**:
-  $$Z = \frac{70 - 67.5}{2.62} = \frac{2.5}{2.62} \approx +0.954 \implies \mathbf{P \approx 83\%}$$
+  $$\sigma_{Project} = \sqrt{1.00 + 0.69 + 0.69 + 1.00 + 0.69 + 2.25 + 0.11 + 1.00 + 0.11} = \sqrt{7.54} \approx \mathbf{2.75 \text{ ngày}}$$
+* **Xác suất hoàn thành trong 12 tuần (60 ngày)**:
+  $$Z = \frac{60 - 75}{2.75} \approx -5.46 \implies \mathbf{P \approx 0\%}$$ Kế hoạch gốc không thể xong trong 12 tuần.
+* **Kế hoạch điều chỉnh** (chi tiết trong báo cáo Major Assignment, Phần 3):
+  - Cho C chạy song song với B (dùng middleware auth tạm).
+  - G chỉ phụ thuộc D và F (theo hợp đồng API); E trở thành tiền đề của L.
+  - Kiểm thử liên tục trong mỗi sprint, rút L xuống O/M/P = 5/7,5/10.
+  - Nối K → L; thêm N (các gói Should/Could).
+  - Kết quả: đường găng mới A→B→C→F→G→I→L→M, **T = 60 ngày (12 tuần), σ ≈ 2,79, P ≈ 50%**.
+  - Sơ đồ mermaid bên dưới là mạng **ban đầu**, giữ lại để tham khảo.
 
 ```mermaid
 graph LR
@@ -292,7 +301,7 @@ graph LR
 
 ## PHẦN 6: TIẾN ĐỘ THỰC HIỆN & BIỂU ĐỒ GANTT (GANTT CHART)
 
-> **Ghi chú:** Gantt dưới đây là **lịch ước tính ban đầu** dựng từ PERT (67,5 ngày làm việc, bắt đầu 05/09). Mốc thực tế của dự án (ĐACN1 từ 24/08, lập repo QTDA ngày 09/11, các mini-sprint QTDA) được ghi tại `docs/00_Project_History.md` và `docs/02_Project_Management_Plan.md`.
+> **Ghi chú:** Gantt dưới đây là **lịch ước tính ban đầu** dựng từ PERT (bản cũ ghi 67,5 ngày làm việc, bắt đầu 05/09). Mốc thực tế của dự án (ĐACN1 từ 24/08, lập repo QTDA ngày 09/11, các mini-sprint QTDA) được ghi tại `docs/00_Project_History.md` và `docs/02_Project_Management_Plan.md`.
 
 Tiến độ được chia thành **4 Sprint** theo quy trình Agile/Scrum, tận dụng khả năng làm việc song song của 4 vị trí lập trình viên (Backend, Mobile App, Web Admin, AI Engineer):
 

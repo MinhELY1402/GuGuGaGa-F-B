@@ -28,3 +28,16 @@ $$\text{Mức Độ Rủi Ro (Risk Score)} = \text{Xác Suất (P: 1–5)} \time
 | **R08** | Model AI chưa đạt Top-1 ≥ 80%. `train.py` dùng mốc 0,7205 khi resume, gợi ý val acc gần nhất ~72% | Kỹ thuật / AI | 3 × 3 = **9** (🟡) | Đo bằng `evaluate.py`; báo cáo đúng số đo; giữ Top-3 + fallback | Bảo | Đang theo dõi |
 | **R09** | Lộ GitHub token cá nhân do chia sẻ trong nhóm | An toàn thông tin | 3 × 5 = **15** (🔴) | Thu hồi token đã chia sẻ; mỗi người chỉ dùng token của mình | Tiến | Cần xử lý ngay |
 | **R10** | Backend không khởi động từ repo do thiếu `user.route.js`, `admin.route.js` | Kỹ thuật | 5 × 4 = **20** → đã xử lý | Dựng lại route + test API trong CI | Tiến | Đã xử lý (14/11) |
+
+---
+
+### CẬP NHẬT SAU KIỂM THỬ THỰC TẾ (15/11/2026)
+
+| Mã | Diễn biến | P × I (mới) | Phản ứng thực tế | Trạng thái |
+|:---:|:---|:---:|:---|:---:|
+| **R06** | **Đã xảy ra:** key Gemini ghi cứng trong `ai_service.dart` (repo public và APK). Token GitHub cá nhân bị chia sẻ trong nhóm | 5 × 5 = **25** (🔴) → 2 × 5 = **10** | Chatbot gọi qua backend (`/api/ai/chat`), xoá key khỏi mã nguồn, kiểm tra APK không còn key bí mật, `.gitignore` chặn file service account. **Còn lại:** thu hồi key Gemini cũ và các token GitHub đã lộ | Đang xử lý |
+| **R01** | Webhook Casso: thêm kiểm tra `Secure-Token`, có test tự động cho idempotency | 1 × 4 = 4 | Giữ polling (CR-01) | Đã kiểm soát |
+| **R03** | Quét hoá đơn bằng Gemini lỗi do ảnh gửi lên không có Content-Type | 2 × 3 = 6 | Backend tự nhận dạng loại ảnh | Đã kiểm soát |
+| **R04** | Không có key OpenCage hay token Mapbox thì bản đồ và tra địa chỉ hỏng | 2 × 3 = 6 | Dự phòng nhiều tầng: Mapbox → Nominatim/OSM → toạ độ | Đã kiểm soát |
+| **R11** | **Mới:** server demo chạy trên máy cá nhân (tunnel đổi URL, mất dữ liệu khi tắt đột ngột) | 3 × 3 = **9** (🟡) | Đổi URL ngay trong app; lưu dữ liệu trước khi tắt và mỗi 10 phút. **Đã xảy ra một lần:** mất dữ liệu 19:04–20:02 ngày 15/11 | Đang theo dõi |
+| **R12** | **Mới:** đăng nhập Google phụ thuộc SHA-1 của máy build | 3 × 2 = 6 | Ghi rõ trong README; máy build khác phải thêm SHA-1 vào Firebase | Đang theo dõi |

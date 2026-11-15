@@ -1,0 +1,12 @@
+{
+  "name": "gugugaga-md2docx",
+  "private": true,
+  "type": "commonjs",
+  "description": "Xuất docs/*.md (GFM cơ bản) sang .docx",
+  "scripts": {
+    "report": "node md2docx.js ../../docs/01_Final_Technical_Report.md ../../docs/Bao_cao_tong_ket_QTDA_GuGuGaGa.docx"
+  },
+  "dependencies": {
+    "docx": "9.5.1"
+  }
+}

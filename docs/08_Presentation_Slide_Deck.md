@@ -37,8 +37,8 @@
 ---
 
 ### SLIDE 4: CHỈ SỐ THỰC THI & LỊCH TRÌNH ĐƯỜNG GĂNG (CPM & BURNDOWN)
-* **Chuỗi đường găng**: $\text{Start} \rightarrow A \rightarrow B \rightarrow D \rightarrow E \rightarrow G \rightarrow I \rightarrow L \rightarrow M \rightarrow \text{End}$ (67.5 ngày làm việc).
-* **Lịch sử dự án**: Sản phẩm kế thừa từ ĐACN1 (từ 24/08); repo QTDA được tổ chức lại ngày 09/11/2026; từ đó mọi thay đổi đi qua PR có review và CI (xem `docs/00_Project_History.md`).
+* **Chuỗi đường găng**: $\text{Start} \rightarrow A \rightarrow B \rightarrow C \rightarrow D \rightarrow E \rightarrow G \rightarrow I \rightarrow L \rightarrow M \rightarrow \text{End}$ (cũ, bỏ sót C). Tính lại: **A→B→C→D→E→G→I→L→M = 75 ngày** → vượt hạn 12 tuần → điều chỉnh mạng còn **60 ngày (12 tuần), P ≈ 50%**.
+* **Lịch sử dự án**: Sản phẩm kế thừa từ ĐACN1 (từ 24/08); repo QTDA được tổ chức lại ngày 09/11/2026; từ 14/11 thay đổi đi qua PR và CI có test thật (PR #26: CI 4/4 xanh, nhưng chưa có review). Branch protection đang chờ bật (issue #30).
 
 ---
 
@@ -58,16 +58,32 @@
 
 ---
 
-### SLIDE 7: BÀI HỌC KINH NGHIỆM HÀNG ĐẦU (TOP LESSONS LEARNED)
-* **Thiết kế chịu lỗi cho dịch vụ bên thứ ba (Third-party Resilience)**: Luôn xây dựng cơ chế Polling song song và Fallback đa tầng.
-* **Kỷ luật GitFlow**: Bắt buộc Peer Review và bảo vệ nhánh chính giúp bảo vệ tính toàn vẹn hệ thống.
-* **Tối ưu hóa mô hình AI**: Chọn giải pháp thực dụng (MobileNetV2 9.3MB) thay vì mô hình cồng kềnh khó triển khai.
+### SLIDE 7: KIỂM THỬ THỰC TẾ & PHÁT HÀNH BETA (v1.1.0-beta)
+* **Phát hành:** 2 APK Android (Khách hàng, Tài xế) trên GitHub Releases; server demo chạy qua Cloudflare Tunnel, đổi được địa chỉ server ngay trong app.
+* **Test xanh chưa đủ:** 22/22 test tự động pass, CI xanh, nhưng khi cài lên điện thoại thật nhóm vẫn tìm ra **10 lỗi**:
+  - App khách hàng không mở được (thiếu `MainActivity`).
+  - Bản đồ và tra địa chỉ hỏng khi thiếu key.
+  - Đăng nhập Google chỉ chạy trên web.
+  - Quét AI đối soát lỗi do loại ảnh.
+  - Dữ liệu mẫu thiếu ảnh, có danh sách quán bịa.
+* **Sự cố bảo mật thật (R06):** key Gemini bị ghi cứng trong repo public. Đã chuyển chatbot sang gọi qua backend và xoá key khỏi app; key cũ cần được thu hồi.
+* **Sự cố vận hành (R11):** tắt server sai cách làm mất dữ liệu demo 1 giờ. Đã sửa script để lưu dữ liệu trước khi tắt và tự lưu mỗi 10 phút.
 
 ---
 
-### SLIDE 8: CHUYỂN TIẾP SANG LIVE DEMO (5 PHÚT)
-* **Quy trình Demo 3 thiết bị đồng thời**:
-  1. *Khách hàng (Minh)*: Chụp ảnh món Bánh bèo $\rightarrow$ AI nhận diện $\rightarrow$ Đặt món quét mã VietQR.
-  2. *Web Admin (Bảo)*: Màn hình Admin nhận đơn $\rightarrow$ Tiền vào tài khoản đơn tự động duyệt $\rightarrow$ Gán tài xế.
-  3. *Tài xế (Minh)*: App Shipper nhận đơn $\rightarrow$ Mapbox vẽ tuyến đường giao hàng $\rightarrow$ Xác nhận thu COD.
+### SLIDE 8: BÀI HỌC KINH NGHIỆM HÀNG ĐẦU (TOP LESSONS LEARNED)
+* **Thiết kế chịu lỗi cho dịch vụ bên thứ ba**: polling song song với webhook (CR-01); bản đồ và tra địa chỉ có nhiều tầng dự phòng (Mapbox → OpenStreetMap → toạ độ).
+* **Phải thử trên thiết bị thật**: CI chỉ chứng minh code build được, không chứng minh app chạy được.
+* **Không nhúng secret vào app di động**: key bí mật đặt ở backend; app chỉ giữ token public.
+* **Quy trình phải khớp thực tế**: hồ sơ ghi "bắt buộc review", nhưng PR #26 vẫn được merge thẳng vào `main` khi chưa ai review. Cần bật branch protection (issue #30) thì quy định mới có hiệu lực.
+
+---
+
+### SLIDE 9: CHUYỂN TIẾP SANG LIVE DEMO (5 PHÚT)
+* **Chuẩn bị:** bật server demo (`scripts/serve-demo.sh`), nhập URL vào 2 app.
+* **Kịch bản demo 2 điện thoại + 1 máy tính** (các bước đã chạy được trên bản v1.1.0-beta):
+  1. *Khách hàng*: đăng nhập bằng Google → chọn chi nhánh Đà Nẵng → hỏi chatbot "Tôi có 50k, tư vấn món ăn trưa" → thêm món vào giỏ → chọn địa chỉ trên bản đồ → đặt đơn chuyển khoản → bấm "Tôi đã chuyển khoản" (giả lập thanh toán).
+  2. *Tài xế*: thấy đơn trong danh sách chờ → nhận đơn → bản đồ Mapbox vẽ đường đi → "Quét AI đối soát" ảnh biên lai → xác nhận giao.
+  3. *Admin Web*: dashboard cập nhật doanh thu, đơn chuyển sang "Đã giao hàng".
+* **Chưa demo:** quét món bằng camera AI, vì AI Service (PyTorch) chưa được host.
 * *Sẵn sàng nhận câu hỏi phản biện từ Hội đồng!*
