@@ -4,7 +4,10 @@ import { config } from "./env.js";
 
 const serviceAccountPath = config.firebase.serviceAccountPath;
 
-if (existsSync(serviceAccountPath)) {
+if (process.env.FIRESTORE_EMULATOR_HOST) {
+  // Chạy local với Firebase Emulator (không cần service account)
+  admin.initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID || "demo-gugugaga" });
+} else if (existsSync(serviceAccountPath)) {
   const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 } else if (process.env.NODE_ENV === "test") {

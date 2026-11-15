@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
+import '../constants.dart';
+import '../services/server_config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -121,13 +123,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'GuGuGaGa',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
+                    // Nhấn giữ để đổi địa chỉ server (bản thử nghiệm)
+                    GestureDetector(
+                      onLongPress: () =>
+                          showServerDialog(context, AppConstants.baseUrl),
+                      child: const Text(
+                        'GuGuGaGa',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ),
                     const Text(

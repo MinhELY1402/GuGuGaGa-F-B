@@ -10,3 +10,6 @@ build/
 Admin/dist/
 Backend/uploads/
 __pycache__/
+
+# Dữ liệu server demo local (emulator, log, URL tunnel)
+.demo-data/

@@ -7,6 +7,8 @@ import 'providers/favorite_provider.dart';
 import 'screens/main/main_screen.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'constants.dart';
+import 'services/server_config.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -14,6 +16,7 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await ServerConfig.load();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -66,7 +69,10 @@ class MyApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
-        home: const MainScreen(),
+        home: ServerGate(
+          currentUrl: () => AppConstants.baseUrl,
+          builder: (_) => const MainScreen(),
+        ),
       ),
     );
   }
