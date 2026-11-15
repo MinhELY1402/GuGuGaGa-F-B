@@ -17,4 +17,5 @@ docs/04_Risk_Register_Evolution.md|04_So_dang_ky_rui_ro
 docs/05_Sprint_Retrospectives.md|05_Bien_ban_Sprint_Retrospective
 docs/06_Scope_Change_Control_Record.md|06_Kiem_soat_thay_doi_CR-01
 docs/07_Stakeholder_Acceptance_Signoff.md|07_Bien_ban_nghiem_thu_UAT
+docs/09_Evidence_Package_Checklist.md|09_Evidence_Package_Checklist
 LIST

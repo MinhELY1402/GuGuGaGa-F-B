@@ -1,15 +1,26 @@
 # BẢNG THEO DÕI TIẾN HÓA RỦI RO (RISK REGISTER EVOLUTION)
-## DỰ ÁN GUGUGAGA (CẬP NHẬT QUA SPRINT 1 VÀ SPRINT 2)
+## DỰ ÁN GUGUGAGA — CẬP NHẬT WEEK 6 (SPRINT 1), WEEK 11 (SPRINT 2), 14/11 VÀ 15/11/2026
 
 **Công thức đánh giá:**  
 $$\text{Mức Độ Rủi Ro (Risk Score)} = \text{Xác Suất (P: 1–5)} \times \text{Mức Ảnh Hưởng (I: 1–5)}$$  
 *Thang điểm: $1 - 6$: Thấp (🟢 Xanh) | $8 - 14$: Trung bình (🟡 Vàng) | $15 - 25$: Nghiêm trọng (🔴 Đỏ)*
 
+### LỊCH CẬP NHẬT VÀ NGUỒN GỐC TỪNG ĐỢT
+
+| Đợt | Thời điểm | Giai đoạn | Cách ghi nhận | Bằng chứng |
+|:---:|:---|:---|:---|:---|
+| **Week 6** | 28/09 – 02/10/2026, sau Sprint 1 (24/08 – 27/09) | ĐACN1 | **Ghi lại sau** khi lập repo QTDA (09–14/11/2026), dựa trên trao đổi của nhóm | [CẦN BỔ SUNG: biên bản họp / tin nhắn nhóm gốc có ngày, issue #32] |
+| **Week 11** | 02/11 – 06/11/2026, cuối Sprint 2 (28/09 – 08/11) | ĐACN1 | **Ghi lại sau**, như trên | [CẦN BỔ SUNG, như trên] |
+| **14/11** | 14/11/2026, bắt đầu QTDA-A | QTDA | Ghi nhận đúng thời điểm: R07–R10 | Commit trên GitHub, issue #27–#42 |
+| **15/11** | 15/11/2026, sau kiểm thử beta trên điện thoại | QTDA | Ghi nhận đúng thời điểm: R06 đã xảy ra, R11, R12 | Release v1.1.0-beta, PR #43, #44, issue #45–#50 |
+
+> Đợt Week 6 và Week 11 thuộc giai đoạn ĐACN1, khi nhóm chưa dùng repo này. Số điểm P×I của hai đợt được nhóm **ghi lại sau** khi lập repo, không phải bản cập nhật lưu đúng vào tuần 6 và tuần 11. Muốn dùng làm bằng chứng kiểm toán, cần đính kèm tài liệu gốc của thời điểm đó.
+
 ---
 
 ### BẢNG THEO DÕI RỦI RO CHI TIẾT (6 RỦI RO THỰC TẾ)
 
-| Mã | Tên rủi ro & Mô tả sự cố | Phân loại | Đợt 1 (Sprint 1) P × I = Score | Đợt 2 (Sprint 2) P × I = Score | Biện pháp phòng ngừa (Mitigation) & Ứng phó thực tế (Contingency) | Người phụ trách | Trạng thái hiện tại |
+| Mã | Tên rủi ro & Mô tả sự cố | Phân loại | Week 6 · Sprint 1 — P × I = Score | Week 11 · Sprint 2 — P × I = Score | Biện pháp phòng ngừa (Mitigation) & Ứng phó thực tế (Contingency) | Người phụ trách | Trạng thái hiện tại |
 |:---:|:---|:---:|:---:|:---:|:---|:---:|:---:|
 | **R01** | **Webhook Casso trễ hoặc gián đoạn** do mạng hoặc bên thứ 3 khiến khách hàng thanh toán xong phải chờ lâu | Kỹ thuật / Bên thứ 3 | 3 × 5 = **15** (🔴 Đỏ) | 1 × 4 = **4** (🟢 Xanh) | **Xử lý qua CR-01**: Bổ sung cơ chế Polling chu kỳ 5 giây từ Flutter app lên endpoint `/check-payment`, đồng thời thêm nút *"Tôi đã chuyển khoản"* cho phép đối soát cưỡng bức. | Bảo (BE), Huy (QA) | **Đã giải quyết triệt để** |
 | **R02** | **Xung đột nhận đơn (Race Condition)**: 2 tài xế cùng lúc bấm nhận 1 đơn hàng | Kỹ thuật / Đồng thời | 4 × 4 = **16** (🔴 Đỏ) | 1 × 3 = **3** (🟢 Xanh) | Áp dụng Firestore Transaction và kiểm tra Optimistic Locking `status == 'PENDING'`. Khi phát hiện tranh chấp, app tài xế báo ngay *"Đơn đã có tài xế khác tiếp nhận"*. | Minh (Mobile), Bảo (BE) | **Đã giải quyết** |

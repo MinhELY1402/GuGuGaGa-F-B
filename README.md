@@ -114,4 +114,5 @@ GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) chạy tr�
 | [docs/08](docs/08_Presentation_Slide_Deck.md) | Slide bảo vệ |
 | [docs/GuGuGaGa_Slide_Bao_Ve.pptx](docs/GuGuGaGa_Slide_Bao_Ve.pptx) | Slide bảo vệ (PowerPoint, có ghi chú người nói) |
 | [docs/Major_Assignment_SPM_GuGuGaGa_v2.docx](docs/Major_Assignment_SPM_GuGuGaGa_v2.docx) | Báo cáo Major Assignment theo mẫu VKU |
+| [docs/09](docs/09_Evidence_Package_Checklist.md) | Gói bằng chứng kiểm toán (Evidence Package Checklist) |
 | [docs/word/](docs/word/) | Bản Word của các tài liệu trên. Xuất lại: `bash tools/md2docx/export-all.sh` |
