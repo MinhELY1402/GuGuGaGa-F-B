@@ -39,6 +39,12 @@ class _MainScreenState extends State<MainScreen> {
             _screens[1] = MenuScreen(initialParentCategory: parentCategory);
           });
         },
+        onOpenMenu: () {
+          setState(() {
+            _currentIndex = 1;
+            _screens[1] = MenuScreen(key: UniqueKey());
+          });
+        },
       ),
       const MenuScreen(),
       const NotificationScreen(),

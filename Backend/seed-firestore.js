@@ -19,6 +19,39 @@ if (process.env.FIRESTORE_EMULATOR_HOST) {
 
 const db = admin.firestore();
 
+// Ảnh món ăn trên Cloudinary của nhóm (ghép theo tên món)
+const PRODUCT_IMAGES = {
+  "Bánh Đúc Nóng Hà Nội": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780377900/products/ifukfsicgxqkpycqfjht.jpg",
+  "Bánh Cuốn Nóng Thịt Mộc Nhĩ": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378324/products/hicpstip74io4mw6z8yu.jpg",
+  "Bánh Khọt Vũng Tàu Tôm Tươi": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378276/products/gkvy2ivjmzcc8qwgo1mm.jpg",
+  "Bánh Mì Thịt Nướng Đặc Biệt": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378250/products/n52cw5jsqx7zj9miktpm.jpg",
+  "Bánh Bột Lọc Trần Nhân Tôm Thịt": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378340/products/ycbveevhpd0pr02nksfg.jpg",
+  "Bánh Tét Nhân Thịt Mỡ Đậu Xanh": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378203/products/eabrupylz1lvo5wiguji.jpg",
+  "Mẹt Bún Đậu Mắm Tôm Đầy Đủ": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378561/products/gaiul5gywufu2onqqmzw.jpg",
+  "Nem Chua Rán Ngon Giòn": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378309/products/n79reuuynm3otpfxsrl8.jpg",
+  "Bánh Bèo Chén Miền Trung": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378418/products/yrvqlvltnaqyenxj8dua.jpg",
+  "Bún Riêu Cua Sườn Sụn": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378355/products/lldercvpakf7y57nb9eb.jpg",
+  "Bún Mắm Miền Tây Sạch Sẽ": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378030/products/adsadn5nmk7tz0y6rmgw.jpg",
+  "Bánh Tráng Nướng Đà Lạt Mỡ Hành": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378403/products/gdaprmebkhztvf6qrgpr.jpg",
+  "Bánh Canh Cua Bột Gạo": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378437/products/npzfjshz7jajeiiqbdqo.jpg",
+  "Gỏi Cuốn Tôm Thịt Nước Tương": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378293/products/nhsrgwxkg9dcte5ga4nw.jpg",
+  "Bánh Xèo Nam Bộ Tôm Thịt": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378100/products/tznn6cvrn8vpiiratcoz.jpg",
+  "Hủ Tiếu Nam Vang Khô/Nước": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378077/products/al3bfb4dsweorgxsfao7.jpg",
+  "Bún Thịt Nướng Chả Giò": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378458/products/oeqckx8znjlewlgneoqr.jpg",
+  "Cơm Cá Kho Tộ Đậm Đà": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378506/products/bs4btihruhg5sdbwdxha.jpg",
+  "Cơm Tấm Sườn Bì Chả Trứng": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378387/products/hakz4cd2xt4i8mqpmzkc.jpg",
+  "Bánh Chưng Đậu Xanh Thịt Mỡ": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378158/products/nhvn13v35axdquqoxnsp.jpg",
+  "Bánh Căn Trứng Cút": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378373/products/zh8yvrkp8rwrhjnutrxy.jpg",
+  "Bún Bò Huế Đặc Biệt Giò Chả": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378053/products/dw9lldoz2lasqeyrxg5s.jpg",
+  "Xôi Xéo Ruốc Hành Phi Mỡ Gà": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378541/products/rf2uimuzjknfqlte23yl.jpg",
+  "Cao Lầu Hội An Thịt Xá Xíu": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378525/products/iv5u1mrvp25sj3njfe8c.jpg",
+  "Mỳ Quảng Tôm Thịt Trứng Cút": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378011/products/tqccbeh4zlrkdoazn7ux.jpg",
+  "Phở Bò Tái Nạm Gầu Cực Chất": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780377926/products/kgwy4s07h1wrazuoqyy1.jpg",
+  "Cháo Lòng Nóng Hổi Đầy Đủ": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780377984/products/v8j47iq3drkkpx68xdvb.jpg",
+  "Bánh Pía Sầu Riêng Trứng Muối": "https://res.cloudinary.com/dtgcs1gtj/image/upload/v1780378234/products/nctk1tuuut9ktqbqdyvs.jpg",
+};
+
+
 async function deleteCollection(collectionPath) {
   const snap = await db.collection(collectionPath).get();
   if (snap.empty) return;
@@ -143,7 +176,7 @@ async function main() {
       name: cat.productName,
       price: cat.price,
       desc: cat.desc,
-      image: null,
+      image: PRODUCT_IMAGES[cat.productName] ?? null,
       createdAt: now,
       updatedAt: now
     });
