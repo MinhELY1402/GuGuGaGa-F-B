@@ -6,6 +6,20 @@ import admin from "firebase-admin";
 
 const usersRef = db.collection("users");
 
+/**
+ * Firebase Auth dùng để xác thực ID token Google.
+ * Khi chạy Firestore emulator (project demo), token Google vẫn thuộc project Firebase thật
+ * → khởi tạo app riêng với FIREBASE_AUTH_PROJECT_ID (chỉ cần projectId, không cần service account).
+ */
+function googleAuth() {
+  const projectId = process.env.FIREBASE_AUTH_PROJECT_ID;
+  if (!projectId) return admin.auth();
+  const app =
+    admin.apps.find((a) => a?.name === "google-auth") ||
+    admin.initializeApp({ projectId }, "google-auth");
+  return admin.auth(app);
+}
+
 export const authService = {
   async signUp(name, phone, email, password) {
     // 1. Kiểm tra email đã tồn tại chưa
@@ -104,7 +118,7 @@ export const authService = {
 
   async googleSignIn(firebaseIdToken) {
     // 1. Xác thực Firebase ID Token
-    const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
+    const decodedToken = await googleAuth().verifyIdToken(firebaseIdToken);
     const { email, name, uid } = decodedToken;
 
     if (!email) {

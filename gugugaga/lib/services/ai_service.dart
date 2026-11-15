@@ -5,13 +5,8 @@ import '../models/combo.dart';
 import '../constants.dart';
 
 class AIService {
-  static const String _fallbackKey = 'AIzaSyBWUYcCfx3SdcoV8RplnNfiPV0u-vV6Kjo';
-
-  String get _key =>
-      AppConstants.geminiApiKey.isNotEmpty ? AppConstants.geminiApiKey : _fallbackKey;
-
-  final String _url =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
+  // Gọi Gemini qua backend (/api/ai/chat): key nằm ở server, không nhúng trong app.
+  String get _url => '${AppConstants.baseUrl}/ai/chat';
 
   Future<AIResponse> sendMessage(
       String userMessage, List<Product> products, List<Combo> combos, {Product? currentProduct}) async {
@@ -49,20 +44,13 @@ Trả về JSON đúng cấu trúc:
 }
 """;
 
-    final response = await http.post(
-      Uri.parse("$_url?key=$_key"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "contents": [
-          {
-            "role": "user",
-            "parts": [
-              {"text": prompt}
-            ]
-          }
-        ]
-      }),
-    );
+    final response = await http
+        .post(
+          Uri.parse(_url),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({"prompt": prompt}),
+        )
+        .timeout(const Duration(seconds: 60));
 
     if (response.statusCode != 200) {
       if (response.statusCode == 429 || response.body.contains('Quota exceeded')) {

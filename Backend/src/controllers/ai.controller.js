@@ -3,10 +3,60 @@ import axios from "axios";
 import FormData from "form-data";
 import db from "../configs/firestore.js";
 import { ApiResponse } from "../configs/apiResponse.js";
+import { detectImageMime } from "../utils/image-mime.js";
 
 const productsRef = db.collection("products");
 
+// Giới hạn đơn giản cho /api/ai/chat: tối đa CHAT_LIMIT request / phút / IP
+const CHAT_LIMIT = 20;
+const CHAT_MAX_PROMPT = 30000;
+const chatHits = new Map();
+function chatRateLimited(ip) {
+  const now = Date.now();
+  const hits = (chatHits.get(ip) || []).filter((t) => now - t < 60_000);
+  hits.push(now);
+  chatHits.set(ip, hits);
+  return hits.length > CHAT_LIMIT;
+}
+
 export const aiController = {
+  /**
+   * POST /api/ai/chat { prompt } — chuyển tiếp tới Gemini bằng key phía server,
+   * để app không phải nhúng GEMINI_API_KEY. Trả nguyên JSON của Gemini (candidates...).
+   */
+  async chat(req, res) {
+    const prompt = req.body?.prompt;
+    if (typeof prompt !== "string" || !prompt.trim()) {
+      return res.status(400).json({ success: false, message: "prompt is required" });
+    }
+    if (prompt.length > CHAT_MAX_PROMPT) {
+      return res.status(413).json({ success: false, message: "prompt is too long" });
+    }
+    if (chatRateLimited(req.ip)) {
+      return res.status(429).json({ success: false, message: "Quota exceeded: too many requests, try again in a minute" });
+    }
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ success: false, message: "GEMINI_API_KEY is not configured in backend environment" });
+    }
+    try {
+      const model = process.env.GEMINI_CHAT_MODEL || "gemini-3.5-flash-lite";
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] }),
+        }
+      );
+      const body = await r.text();
+      return res.status(r.status).type("application/json").send(body);
+    } catch (error) {
+      console.error("[AI chat]", error);
+      return res.status(502).json({ success: false, message: "Gemini request failed" });
+    }
+  },
+
   async recognizeFood(req, res) {
     try {
       if (!req.file) {
@@ -17,7 +67,7 @@ export const aiController = {
       const form = new FormData();
       form.append("image", req.file.buffer, {
         filename: req.file.originalname || "image.jpg",
-        contentType: req.file.mimetype,
+        contentType: detectImageMime(req.file.buffer, req.file.mimetype, req.file.originalname),
       });
 
       const pythonResponse = await axios.post("http://localhost:8000/predict", form, {
@@ -88,7 +138,7 @@ export const aiController = {
       const imagePart = {
         inlineData: {
           data: req.file.buffer.toString("base64"),
-          mimeType: req.file.mimetype
+          mimeType: detectImageMime(req.file.buffer, req.file.mimetype, req.file.originalname)
         }
       };
 

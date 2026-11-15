@@ -2,6 +2,8 @@
 # Bật server demo GuGuGaGa trên máy này cho người khác chạy thử APK:
 #   Firestore Emulator (dữ liệu lưu ở .demo-data/) + Backend (cổng 5000) + Cloudflare Quick Tunnel.
 # Chạy:  bash scripts/serve-demo.sh        (Ctrl+C để tắt, dữ liệu được lưu lại)
+# Hoặc chạy nền:  systemd-run --user --unit=gugugaga-demo --property=KillSignal=SIGINT --property=KillMode=mixed --property=TimeoutStopSec=120 \
+#                  --working-directory="$PWD" --setenv=PATH="$HOME/.local/bin:$PATH" bash scripts/serve-demo.sh
 # Cần:   Node 20+, JDK 21+, cloudflared (https://github.com/cloudflare/cloudflared/releases)
 set -euo pipefail
 
@@ -12,6 +14,14 @@ EMU_PORT="${EMU_PORT:-8085}"
 API_PORT="${API_PORT:-5000}"
 PROJECT_ID="demo-gugugaga"
 mkdir -p "$DATA/firestore" "$LOGS"
+
+# ---- Đã có server demo đang chạy? (vd. systemd service gugugaga-demo) ----
+if curl -sf "http://localhost:$API_PORT/health" >/dev/null 2>&1 || ss -ltn 2>/dev/null | grep -q ":$EMU_PORT "; then
+  echo "ℹ️  Server demo đã đang chạy (cổng $API_PORT/$EMU_PORT đang được dùng)."
+  [[ -s "$DATA/current-url.txt" ]] && echo "   URL công khai: $(cat "$DATA/current-url.txt")"
+  echo "   Nếu đang chạy bằng service: systemctl --user status|stop gugugaga-demo"
+  exit 0
+fi
 
 # ---- JDK 21+ cho Firestore Emulator ----
 if [[ -z "${JAVA_HOME:-}" ]]; then
@@ -29,7 +39,12 @@ EOF
 
 PIDS=()
 cleanup() {
-  echo; echo "⏹  Đang tắt (dữ liệu emulator được lưu vào .demo-data/firestore)..."
+  echo; echo "⏹  Đang tắt, lưu dữ liệu emulator vào .demo-data/firestore..."
+  # Lưu chủ động khi emulator còn sống (export-on-exit có thể thất bại nếu tiến trình bị dừng cùng lúc)
+  if [[ -n "${FIRESTORE_EMULATOR_HOST:-}" ]]; then
+    (cd "$DATA" && timeout 60 npx -y firebase-tools@13 emulators:export "$DATA/firestore" --force \
+       --project "$PROJECT_ID" >> "$LOGS/export.log" 2>&1) && echo "   ✔ Đã lưu" || echo "   ⚠ Lưu thất bại, xem $LOGS/export.log"
+  fi
   for ((i=${#PIDS[@]}-1; i>=0; i--)); do kill -INT "${PIDS[$i]}" 2>/dev/null || true; done
   wait 2>/dev/null || true
 }
@@ -48,16 +63,26 @@ until grep -q "All emulators ready" "$LOGS/emulator.log" 2>/dev/null; do
 done
 export FIRESTORE_EMULATOR_HOST="127.0.0.1:$EMU_PORT" FIREBASE_PROJECT_ID="$PROJECT_ID"
 
-# ---- 2. Seed dữ liệu mẫu lần đầu ----
-if [[ ! -f "$DATA/.seeded" ]]; then
-  echo "🌱 Nạp dữ liệu mẫu lần đầu..."
-  (cd "$ROOT/Backend" && node seed-firestore.js > "$LOGS/seed.log" 2>&1) && touch "$DATA/.seeded"
+# ---- 2. Seed dữ liệu mẫu khi chưa có bản lưu ----
+if [[ ${#IMPORT_ARGS[@]} -eq 0 ]]; then
+  echo "🌱 Chưa có dữ liệu lưu, nạp dữ liệu mẫu..."
+  (cd "$ROOT/Backend" && node seed-firestore.js > "$LOGS/seed.log" 2>&1)
 fi
 
+# Lưu dữ liệu emulator định kỳ (phòng khi máy tắt đột ngột, không kịp export-on-exit)
+( while sleep 600; do
+    (cd "$DATA" && npx -y firebase-tools@13 emulators:export "$DATA/firestore" --force \
+       --project "$PROJECT_ID" >> "$LOGS/export.log" 2>&1) || true
+  done ) &
+PIDS+=($!)
+
 # ---- 3. Backend ----
+# Dừng backend chạy riêng (nếu từng hot-reload bằng unit gugugaga-backend) để không tranh cổng
+systemctl --user stop gugugaga-backend 2>/dev/null || true
 [[ -d "$ROOT/Backend/node_modules" ]] || (cd "$ROOT/Backend" && npm ci)
 echo "▶️  Backend (cổng $API_PORT)..."
-(cd "$ROOT/Backend" && PORT="$API_PORT" JWT_SECRET="${JWT_SECRET:-gugugaga-demo-secret}" \
+# JWT_SECRET, Cloudinary... đọc từ Backend/.env (nếu có)
+(cd "$ROOT/Backend" && PORT="$API_PORT" \
    node src/server.js > "$LOGS/backend.log" 2>&1) &
 PIDS+=($!)
 until curl -sf "http://localhost:$API_PORT/health" >/dev/null; do sleep 1; done

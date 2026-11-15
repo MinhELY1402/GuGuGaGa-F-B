@@ -11,6 +11,7 @@ const upload = multer({
 const routerAI = express.Router();
 
 routerAI.post("/recognize-food", upload.single("image"), aiController.recognizeFood);
+routerAI.post("/chat", aiController.chat);
 routerAI.post("/scan-receipt", upload.single("image"), aiController.scanReceipt);
 
 export default routerAI;

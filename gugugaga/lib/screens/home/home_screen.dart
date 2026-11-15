@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/api_service.dart';
 import '../../models/product.dart';
+import '../../models/branch.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/favorite_provider.dart';
@@ -15,7 +16,8 @@ import '../chat/chat_screen.dart';
 class HomeScreen extends StatefulWidget {
   final Function(String?)? onCategorySelected;
   final Function(String)? onParentCategorySelected;
-  const HomeScreen({super.key, this.onCategorySelected, this.onParentCategorySelected});
+  final VoidCallback? onOpenMenu;
+  const HomeScreen({super.key, this.onCategorySelected, this.onParentCategorySelected, this.onOpenMenu});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -34,37 +36,32 @@ class _HomeScreenState extends State<HomeScreen> {
     {"name": "Món Ăn Vặt", "icon": "🍢"},
   ];
 
-  final List<Map<String, dynamic>> _nearbyRestaurants = [
-    {
-      "name": "Bún bò Huế O Hương",
-      "rating": 4.9,
-      "reviews": 120,
-      "distance": "2.1km",
-      "time": "30 phút",
-      "image": "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500&auto=format&fit=crop&q=60",
-    },
-    {
-      "name": "Phở bò gia truyền Hà Nội",
-      "rating": 4.8,
-      "reviews": 240,
-      "distance": "1.5km",
-      "time": "20 phút",
-      "image": "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=500&auto=format&fit=crop&q=60",
-    },
-    {
-      "name": "Cơm tấm Sài Gòn 1989",
-      "rating": 4.7,
-      "reviews": 185,
-      "distance": "3.2km",
-      "time": "40 phút",
-      "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60",
-    },
-  ];
+  List<Branch> _branches = [];
+  bool _branchesLoaded = false;
+
+  Future<void> _loadBranches() async {
+    try {
+      final branches = await _apiService.getBranches();
+      if (mounted) setState(() { _branches = branches; _branchesLoaded = true; });
+    } catch (_) {
+      if (mounted) setState(() => _branchesLoaded = true);
+    }
+  }
+
+  Future<void> _openBranch(Branch branch) async {
+    await Provider.of<AuthProvider>(context, listen: false).selectBranch(branch);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đã chọn ${branch.name}'), duration: const Duration(seconds: 1)),
+    );
+    widget.onOpenMenu?.call();
+  }
 
   @override
   void initState() {
     super.initState();
     _dataFuture = _fetchData();
+    _loadBranches();
   }
 
   Future<Map<String, dynamic>> _fetchData() async {
@@ -441,103 +438,93 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    // Chi nhánh thật từ API — bấm để chọn chi nhánh và mở thực đơn
                     SizedBox(
                       height: 120,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _nearbyRestaurants.length,
-                        itemBuilder: (context, index) {
-                          final rest = _nearbyRestaurants[index];
-                          return Container(
-                            width: 280,
-                            margin: const EdgeInsets.only(right: 14),
-                            child: Card(
-                              elevation: 1,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                      child: _branches.isEmpty
+                          ? Center(
+                              child: Text(
+                                _branchesLoaded ? 'Chưa có chi nhánh nào' : 'Đang tải chi nhánh...',
+                                style: TextStyle(color: Colors.grey.shade600),
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Image.network(
-                                        rest["image"]!,
-                                        width: 90,
-                                        height: 90,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => Container(
-                                          color: Colors.amber.shade50,
-                                          width: 90,
-                                          height: 90,
-                                          child: const Icon(Icons.restaurant, size: 30),
+                            )
+                          : ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: _branches.length,
+                              itemBuilder: (context, index) {
+                                final branch = _branches[index];
+                                final selected = Provider.of<AuthProvider>(context).selectedBranch?.id == branch.id;
+                                return Container(
+                                  width: 280,
+                                  margin: const EdgeInsets.only(right: 14),
+                                  child: Card(
+                                    elevation: 1,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: selected
+                                          ? BorderSide(color: Colors.red.shade700, width: 1.5)
+                                          : BorderSide.none,
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: InkWell(
+                                      onTap: () => _openBranch(branch),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 90,
+                                              height: 90,
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.shade50,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Icon(Icons.storefront, size: 40, color: Colors.red.shade700),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    branch.name,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.black87,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  Text(
+                                                    branch.address ?? '',
+                                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  Text(
+                                                    selected ? '✓ Đang chọn · Xem thực đơn' : 'Chọn chi nhánh này →',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: Colors.red.shade700,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            rest["name"]!,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              const Icon(Icons.star, color: Colors.amber, size: 14),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '${rest["rating"]} (${rest["reviews"]})',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              Icon(Icons.directions_walk, color: Colors.grey.shade600, size: 14),
-                                              Text(
-                                                ' ${rest["distance"]}',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Icon(Icons.access_time, color: Colors.grey.shade600, size: 14),
-                                              Text(
-                                                ' ${rest["time"]}',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                     const SizedBox(height: 24),
 

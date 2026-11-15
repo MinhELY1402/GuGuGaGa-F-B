@@ -273,8 +273,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate:
-                        'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${AppConstants.mapboxAccessToken}',
+                    urlTemplate: AppConstants.mapTileUrl,
                     userAgentPackageName: 'com.example.GuGuGaGa_shipper',
                   ),
                   // Route polyline - luôn hiển thị đường đi

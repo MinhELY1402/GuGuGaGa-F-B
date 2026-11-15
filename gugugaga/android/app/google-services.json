@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "39143720854",
-    "project_id": "newapp-bd55011a",
-    "storage_bucket": "newapp-bd55011a.firebasestorage.app"
+    "project_number": "528931691506",
+    "project_id": "guga-27d3f",
+    "storage_bucket": "guga-27d3f.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:39143720854:android:9fd455341ebeb46eba3fb7",
+        "mobilesdk_app_id": "1:528931691506:android:e795de0f60cdf5408c296b",
         "android_client_info": {
           "package_name": "com.example.GuGuGaGa"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "528931691506-ru1r3ems9s8f7qhiqln9377r7456b484.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.GuGuGaGa",
+            "certificate_hash": "c629d6d949bfdef7dfea97f25d868dd89b6f724e"
+          }
+        },
+        {
+          "client_id": "528931691506-vmuj2k2jdl4hnaf0nai8atgghrb703l4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyA1D99SzMiF6V8YSZJk4139olzfoPrfun0"
+          "current_key": "AIzaSyCoiZha6E_7pLbdY30pJA5Q1r47FhYyWQ8"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "528931691506-ecreadhito80a5m3imia05cdbl98kfmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
