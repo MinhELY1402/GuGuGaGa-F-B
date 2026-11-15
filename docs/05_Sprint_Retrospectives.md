@@ -10,7 +10,7 @@
 * **Thời gian:** 19:30 – 21:00, Thứ Bảy ngày 26/09/2026
 * **Địa điểm:** Google Meet & Bảng thảo luận nhóm
 * **Chủ trì (Scrum Master):** Võ Nhật Huy (Project Lead)
-* **Thành phần tham gia:** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Minh, Nguyễn Gia Bảo (Đầy đủ 4/4)
+* **Thành phần tham gia:** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Bảo Quang Minh, Nguyễn Gia Bảo (Đầy đủ 4/4)
 
 ### Nội dung thảo luận theo mô hình 4Ls:
 1. **Liked (Những điểm làm tốt, đáng phát huy):**

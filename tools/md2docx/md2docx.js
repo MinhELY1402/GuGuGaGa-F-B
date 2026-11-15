@@ -13,7 +13,27 @@ const FONT = "Times New Roman";
 const PAGE_W = 11906, MARGIN = 1134; // A4, lề 2 cm
 const CONTENT_W = PAGE_W - 2 * MARGIN;
 
-const plain = (t) => t.replace(/\$\\rightarrow\$|\\rightarrow/g, "→").replace(/\\ge\b/g, "≥").replace(/\$/g, "");
+// Đổi LaTeX thông dụng sang ký hiệu Unicode dễ đọc trong Word
+const SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻", "+": "⁺" };
+function latex(t) {
+  let prev;
+  do {
+    prev = t;
+    t = t.replace(/\\(?:mathbf|text|mathrm|textbf|operatorname)\{([^{}]*)\}/g, "$1")
+      .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "($1) / ($2)")
+      .replace(/\\sqrt\{([^{}]*)\}/g, "√($1)")
+      .replace(/_\{([^{}]*)\}/g, "_$1");
+  } while (t !== prev);
+  return t
+    .replace(/\\(?:left|right)/g, "")
+    .replace(/\\rightarrow|\\to\b/g, "→").replace(/\\leftrightarrow/g, "↔").replace(/\\implies/g, "⇒")
+    .replace(/\\approx/g, "≈").replace(/\\times/g, "×").replace(/\\cdot/g, "·")
+    .replace(/\\ge(q)?\b/g, "≥").replace(/\\le(q)?\b/g, "≤").replace(/\\sum/g, "Σ").replace(/\\sigma/g, "σ")
+    .replace(/\\q?quad/g, "   ").replace(/\\%/g, "%").replace(/\\[,;: ]/g, " ")
+    .replace(/\^\{?([0-9+-]+)\}?/g, (_, d) => [...d].map((c) => SUP[c] || c).join(""))
+    .replace(/\$\$?/g, "").replace(/\s{2,}/g, " ");
+}
+const plain = (t) => latex(t);
 function inline(text, base = {}) {
   const runs = [];
   const re = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
@@ -60,6 +80,15 @@ let i = 0, numInstance = 0;
 while (i < lines.length) {
   const line = lines[i], t = line.trim();
   if (!t || t === "---") { i++; continue; }
+  if (t.startsWith("```mermaid")) {
+    // Sơ đồ mermaid không dựng được trong Word: thay bằng ghi chú dẫn tới hình trong báo cáo v2
+    const kind = (lines[i + 1] || "").trim().split(/\s+/)[0];
+    const ref = kind === "gantt" ? "Gantt chart (Figure 3)" : kind === "graph" && /LR/.test(lines[i + 1]) ? "PERT network (Figures 1–2)" : "WBS (Part 2)";
+    i++; while (i < lines.length && !lines[i].trim().startsWith("```")) i++; i++;
+    children.push(new Paragraph({ indent: { left: 360 }, border: { left: { style: BorderStyle.SINGLE, size: 12, color: "4472C4", space: 8 } },
+      children: [new TextRun({ text: `[Sơ đồ — xem ${ref} trong docs/Major_Assignment_SPM_GuGuGaGa_v2.docx]`, italics: true, font: FONT, color: "4472C4" })] }));
+    continue;
+  }
   if (t.startsWith("```")) { i++; while (i < lines.length && !lines[i].trim().startsWith("```")) { children.push(new Paragraph({ children: [new TextRun({ text: lines[i], font: "Consolas", size: 18 })] })); i++; } i++; continue; }
   if (t.startsWith("|")) { const rows = []; while (i < lines.length && lines[i].trim().startsWith("|")) rows.push(lines[i++]); children.push(buildTable(rows)); children.push(new Paragraph({ children: [] })); continue; }
   let m;
@@ -80,7 +109,7 @@ while (i < lines.length) {
 
 const hd = (size) => ({ run: { font: FONT, size, bold: true, color: "1F3864" } });
 const doc = new Document({
-  creator: "GuGuGaGa", title: "Báo cáo tổng kết đồ án QTDA — GuGuGaGa",
+  creator: "GuGuGaGa", title: (lines.find((l) => l.startsWith("# ")) || "# GuGuGaGa").slice(2).trim(),
   styles: {
     default: { document: { run: { font: FONT, size: 24 }, paragraph: { spacing: { after: 100, line: 300 } } } },
     paragraphStyles: [

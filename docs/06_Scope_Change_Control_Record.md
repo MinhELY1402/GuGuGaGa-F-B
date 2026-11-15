@@ -5,7 +5,7 @@
 **Dự án:** Hệ sinh thái GuGuGaGa  
 **Ngày khởi tạo yêu cầu:** 12/10/2026 (Tuần 8 — Sprint 2)  
 **Người đề xuất (Requester):** Võ Nhật Huy (Project Lead & QA Lead)  
-**Ban kiểm soát thay đổi (CCB):** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Gia Bảo, Nguyễn Minh  
+**Ban kiểm soát thay đổi (CCB):** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Gia Bảo, Nguyễn Bảo Quang Minh  
 **Quyết định của CCB:** **APPROVED (Chấp thuận thực thi)**  
 
 ---
@@ -44,6 +44,6 @@ Ban CCB quyết định bổ sung giải pháp kỹ thuật chịu lỗi đa t�
 | **Võ Nhật Huy** | Project Lead / Chủ tịch CCB | **Chấp thuận** | [ký thật] |
 | **Trần Phan Minh Tiến** | Technical Lead / Thành viên | **Chấp thuận** | [ký thật] |
 | **Nguyễn Gia Bảo** | Backend Lead / Người thực thi BE | **Chấp thuận** | [ký thật] |
-| **Nguyễn Minh** | Frontend Lead / Người thực thi UI | **Chấp thuận** | [ký thật] |
+| **Nguyễn Bảo Quang Minh** | Frontend Lead / Người thực thi UI | **Chấp thuận** | [ký thật] |
 
 *Bằng chứng kèm theo: [link tin nhắn/log sự cố webhook thật, biên bản họp CCB].*

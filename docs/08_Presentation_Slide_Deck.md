@@ -3,7 +3,7 @@
 
 **Hội đồng chấm thi:** TS. Nguyễn Thanh Tuấn & Các thầy cô Hội đồng Khoa Khoa học Máy tính  
 **Tên đề tài:** Hệ Sinh Thái Đặt Món Ăn Trực Tuyến Tích Hợp AI — GuGuGaGa  
-**Nhóm sinh viên (4 thành viên):** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Minh, Nguyễn Gia Bảo  
+**Nhóm sinh viên (4 thành viên):** Võ Nhật Huy, Trần Phan Minh Tiến, Nguyễn Bảo Quang Minh, Nguyễn Gia Bảo  
 **Thời lượng phân bổ:** 6 phút thuyết trình Slide + 5 phút Live Demo + 5 phút Hội đồng Q&A  
 
 ---
@@ -14,7 +14,7 @@
 * **Cơ cấu tổ chức (4 thành viên)** — tỷ lệ đóng góp lấy theo GitHub Insights, xem báo cáo:
   - **Võ Nhật Huy**: Project Lead / Scrum Master & QA Lead
   - **Trần Phan Minh Tiến**: Technical Lead & System Architect
-  - **Nguyễn Minh**: Frontend Engineer — Flutter & React
+  - **Nguyễn Bảo Quang Minh**: Frontend Engineer — Flutter & React
   - **Nguyễn Gia Bảo**: Backend & AI Engineer — Node.js & PyTorch
 
 ---

@@ -53,7 +53,7 @@ Xây dựng giải pháp phần mềm hoàn chỉnh giúp các chuỗi cửa hà
 ### 10. Cơ Cấu Tổ Chức & Phân Công 4 Thành Viên
 1. **Võ Nhật Huy**: Project Lead / PM & QA Lead (Chịu trách nhiệm chung, phê duyệt PRs, lập Test Matrix).
 2. **Trần Phan Minh Tiến**: Technical Lead & System Architect (Kiến trúc hệ thống, Firestore Schema, CI/CD).
-3. **Nguyễn Minh**: Frontend Engineer (Chịu trách nhiệm 2 Mobile Apps Flutter và Web Admin).
+3. **Nguyễn Bảo Quang Minh**: Frontend Engineer (Chịu trách nhiệm 2 Mobile Apps Flutter và Web Admin).
 4. **Nguyễn Gia Bảo**: Backend & AI Engineer (Chịu trách nhiệm Express API, VietQR, Casso và Flask AI).
 
 ### 11. Các Bên Liên Quan Chính (Key Stakeholders)

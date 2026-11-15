@@ -7,7 +7,7 @@ Sản phẩm kế thừa từ Đồ án chuyên ngành 1 theo **Pathway 1** (xem
 |---|---|
 | Võ Nhật Huy | Project Lead / Scrum Master & QA Lead |
 | Trần Phan Minh Tiến | Technical Lead & System Architect |
-| Nguyễn Minh | Frontend Engineer (Flutter, React) |
+| Nguyễn Bảo Quang Minh | Frontend Engineer (Flutter, React) |
 | Nguyễn Gia Bảo | Backend & AI Engineer (Node.js, PyTorch) |
 
 ## Kiến trúc
@@ -112,3 +112,6 @@ GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) chạy tr�
 | [docs/06](docs/06_Scope_Change_Control_Record.md) | Kiểm soát thay đổi CR-01 |
 | [docs/07](docs/07_Stakeholder_Acceptance_Signoff.md) | Kịch bản & biên bản UAT |
 | [docs/08](docs/08_Presentation_Slide_Deck.md) | Slide bảo vệ |
+| [docs/GuGuGaGa_Slide_Bao_Ve.pptx](docs/GuGuGaGa_Slide_Bao_Ve.pptx) | Slide bảo vệ (PowerPoint, có ghi chú người nói) |
+| [docs/Major_Assignment_SPM_GuGuGaGa_v2.docx](docs/Major_Assignment_SPM_GuGuGaGa_v2.docx) | Báo cáo Major Assignment theo mẫu VKU |
+| [docs/word/](docs/word/) | Bản Word của các tài liệu trên. Xuất lại: `bash tools/md2docx/export-all.sh` |

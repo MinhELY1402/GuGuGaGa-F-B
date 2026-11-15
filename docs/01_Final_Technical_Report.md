@@ -8,10 +8,10 @@
 
 | Thành viên | MSSV | Vai trò |
 |---|---|---|
-| Võ Nhật Huy | [MSSV] | Project Lead / Scrum Master & QA Lead |
-| Trần Phan Minh Tiến | [MSSV] | Technical Lead & System Architect |
-| Nguyễn Minh | [MSSV] | Frontend Engineer (Flutter, React) |
-| Nguyễn Gia Bảo | [MSSV] | Backend & AI Engineer |
+| Võ Nhật Huy | 23IT.EB047 | Project Lead / Scrum Master & QA Lead |
+| Trần Phan Minh Tiến | 23IT.EB108 | Technical Lead & System Architect |
+| Nguyễn Bảo Quang Minh | 23IT.EB057 | Frontend Engineer (Flutter, React) |
+| Nguyễn Gia Bảo | 23IT.EB007 | Backend & AI Engineer |
 
 > Quy ước: mọi con số trong báo cáo đều có nguồn kiểm chứng đi kèm. Các mục `[CẦN BỔ SUNG]` chỉ được điền khi có số đo hoặc bằng chứng thật.
 
@@ -187,7 +187,7 @@ Lấy từ GitHub Insights và danh sách PR của giai đoạn QTDA (sau 09/11)
 |---|---:|---:|---:|---|
 | Võ Nhật Huy | [ ] | [ ] | [ ] | Quản lý dự án, QA, hồ sơ |
 | Trần Phan Minh Tiến | [ ] | [ ] | [ ] | Kiến trúc, CI, test backend, route |
-| Nguyễn Minh | [ ] | [ ] | [ ] | App Flutter, Admin web |
+| Nguyễn Bảo Quang Minh | [ ] | [ ] | [ ] | App Flutter, Admin web |
 | Nguyễn Gia Bảo | [ ] | [ ] | [ ] | Backend nghiệp vụ, AI |
 
 ---
