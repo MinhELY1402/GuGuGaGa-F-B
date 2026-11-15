@@ -2,7 +2,7 @@
 # Bật server demo GuGuGaGa trên máy này cho người khác chạy thử APK:
 #   Firestore Emulator (dữ liệu lưu ở .demo-data/) + Backend (cổng 5000) + Cloudflare Quick Tunnel.
 # Chạy:  bash scripts/serve-demo.sh        (Ctrl+C để tắt, dữ liệu được lưu lại)
-# Hoặc chạy nền:  systemd-run --user --unit=gugugaga-demo --property=KillSignal=SIGINT \
+# Hoặc chạy nền:  systemd-run --user --unit=gugugaga-demo --property=KillSignal=SIGINT --property=KillMode=mixed --property=TimeoutStopSec=120 \
 #                  --working-directory="$PWD" --setenv=PATH="$HOME/.local/bin:$PATH" bash scripts/serve-demo.sh
 # Cần:   Node 20+, JDK 21+, cloudflared (https://github.com/cloudflare/cloudflared/releases)
 set -euo pipefail
@@ -39,7 +39,12 @@ EOF
 
 PIDS=()
 cleanup() {
-  echo; echo "⏹  Đang tắt (dữ liệu emulator được lưu vào .demo-data/firestore)..."
+  echo; echo "⏹  Đang tắt, lưu dữ liệu emulator vào .demo-data/firestore..."
+  # Lưu chủ động khi emulator còn sống (export-on-exit có thể thất bại nếu tiến trình bị dừng cùng lúc)
+  if [[ -n "${FIRESTORE_EMULATOR_HOST:-}" ]]; then
+    (cd "$DATA" && timeout 60 npx -y firebase-tools@13 emulators:export "$DATA/firestore" --force \
+       --project "$PROJECT_ID" >> "$LOGS/export.log" 2>&1) && echo "   ✔ Đã lưu" || echo "   ⚠ Lưu thất bại, xem $LOGS/export.log"
+  fi
   for ((i=${#PIDS[@]}-1; i>=0; i--)); do kill -INT "${PIDS[$i]}" 2>/dev/null || true; done
   wait 2>/dev/null || true
 }

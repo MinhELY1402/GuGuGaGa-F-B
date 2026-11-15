@@ -72,3 +72,21 @@ test("Webhook Casso: giao dịch không có cú pháp GUGUGAGA không đụng t�
   assert.equal(res.status, 200);
   assert.equal(res.body.results[0].status, "NO_MATCHING_DESCRIPTION");
 });
+
+test("AI chat: thiếu prompt → 400", async () => {
+  const res = await request(app).post("/api/ai/chat").send({});
+  assert.equal(res.status, 400);
+});
+
+test("AI chat: chưa cấu hình GEMINI_API_KEY → 503 (không gọi ra ngoài)", async () => {
+  const saved = process.env.GEMINI_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  const res = await request(app).post("/api/ai/chat").send({ prompt: "xin chào" });
+  if (saved !== undefined) process.env.GEMINI_API_KEY = saved;
+  assert.equal(res.status, 503);
+});
+
+test("AI chat: prompt quá dài → 413", async () => {
+  const res = await request(app).post("/api/ai/chat").send({ prompt: "a".repeat(30001) });
+  assert.equal(res.status, 413);
+});

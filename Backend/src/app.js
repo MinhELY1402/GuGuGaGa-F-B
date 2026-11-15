@@ -13,6 +13,9 @@ dotenv.config();
 
 const app = express();
 
+// Chạy sau Cloudflare Tunnel (cloudflared ở localhost): lấy IP thật từ X-Forwarded-For
+app.set("trust proxy", "loopback");
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());

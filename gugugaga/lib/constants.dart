@@ -33,5 +33,4 @@ class AppConstants {
     return 'http://localhost:5000/api';
   }
 
-  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 }

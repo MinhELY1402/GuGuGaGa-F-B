@@ -91,11 +91,11 @@ async function main() {
 
   // Create branch
   const branchRef = await db.collection("branches").add({
-    name: "Chi nhanh trung tam",
+    name: "Chi nhánh Đà Nẵng",
     phone: "02811112222",
-    address: "1 Nguyen Hue, Quan 1",
-    latitude: 10.775,
-    longitude: 106.7,
+    address: "470 Trần Đại Nghĩa, Hòa Quý, Ngũ Hành Sơn, Đà Nẵng",
+    latitude: 15.9753,
+    longitude: 108.2524,
     createdAt: now,
     updatedAt: now,
   });
