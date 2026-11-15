@@ -2,6 +2,8 @@
 # Bật server demo GuGuGaGa trên máy này cho người khác chạy thử APK:
 #   Firestore Emulator (dữ liệu lưu ở .demo-data/) + Backend (cổng 5000) + Cloudflare Quick Tunnel.
 # Chạy:  bash scripts/serve-demo.sh        (Ctrl+C để tắt, dữ liệu được lưu lại)
+# Hoặc chạy nền:  systemd-run --user --unit=gugugaga-demo --property=KillSignal=SIGINT \
+#                  --working-directory="$PWD" --setenv=PATH="$HOME/.local/bin:$PATH" bash scripts/serve-demo.sh
 # Cần:   Node 20+, JDK 21+, cloudflared (https://github.com/cloudflare/cloudflared/releases)
 set -euo pipefail
 
@@ -12,6 +14,14 @@ EMU_PORT="${EMU_PORT:-8085}"
 API_PORT="${API_PORT:-5000}"
 PROJECT_ID="demo-gugugaga"
 mkdir -p "$DATA/firestore" "$LOGS"
+
+# ---- Đã có server demo đang chạy? (vd. systemd service gugugaga-demo) ----
+if curl -sf "http://localhost:$API_PORT/health" >/dev/null 2>&1 || ss -ltn 2>/dev/null | grep -q ":$EMU_PORT "; then
+  echo "ℹ️  Server demo đã đang chạy (cổng $API_PORT/$EMU_PORT đang được dùng)."
+  [[ -s "$DATA/current-url.txt" ]] && echo "   URL công khai: $(cat "$DATA/current-url.txt")"
+  echo "   Nếu đang chạy bằng service: systemctl --user status|stop gugugaga-demo"
+  exit 0
+fi
 
 # ---- JDK 21+ cho Firestore Emulator ----
 if [[ -z "${JAVA_HOME:-}" ]]; then
