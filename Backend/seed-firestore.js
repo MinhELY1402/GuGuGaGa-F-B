@@ -4,17 +4,18 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 dotenv.config();
 
-// Load service account
-const serviceAccount = JSON.parse(
-  readFileSync(
-    process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "./serviceAccountKey.json",
-    "utf8"
-  )
-);
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+if (process.env.FIRESTORE_EMULATOR_HOST) {
+  // Seed vào Firebase Emulator (local), không cần service account
+  admin.initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID || "demo-gugugaga" });
+} else {
+  const serviceAccount = JSON.parse(
+    readFileSync(
+      process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "./serviceAccountKey.json",
+      "utf8"
+    )
+  );
+  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+}
 
 const db = admin.firestore();
 
