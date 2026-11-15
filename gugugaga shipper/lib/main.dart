@@ -3,10 +3,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'constants.dart';
+import 'services/server_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await ServerConfig.load();
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
   final isLoggedIn = token != null && token.isNotEmpty;
@@ -46,7 +49,10 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
+      home: ServerGate(
+        currentUrl: () => AppConstants.baseUrl,
+        builder: (_) => isLoggedIn ? const HomeScreen() : const LoginScreen(),
+      ),
     );
   }
 }

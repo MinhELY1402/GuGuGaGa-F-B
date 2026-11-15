@@ -4,6 +4,8 @@ import '../../providers/auth_provider.dart';
 import '../main/main_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
+import '../../constants.dart';
+import '../../services/server_config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -118,15 +120,19 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                // Logo/Title
-                Text(
-                  'GuGuGaGa',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade700,
+                // Logo/Title — nhấn giữ để đổi địa chỉ server (bản thử nghiệm)
+                GestureDetector(
+                  onLongPress: () =>
+                      showServerDialog(context, AppConstants.baseUrl),
+                  child: Text(
+                    'GuGuGaGa',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade700,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(

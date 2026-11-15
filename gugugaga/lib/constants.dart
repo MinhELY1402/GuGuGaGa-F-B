@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart'
   show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/server_config.dart';
 
 class AppConstants {
   static String get mapboxAccessToken => dotenv.env['MAPBOX_ACCESS_TOKEN'] ?? '';
   static String get openCageApiKey => dotenv.env['OPENCAGE_API_KEY'] ?? '';
   static String get baseUrl {
+    final custom = ServerConfig.override;
+    if (custom != null && custom.isNotEmpty) return custom;
     final envUrl = dotenv.env['BASE_URL'];
     if (kIsWeb) {
       if (envUrl != null && envUrl.isNotEmpty && !envUrl.contains('10.0.2.2')) {
