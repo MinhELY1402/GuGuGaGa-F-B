@@ -47,3 +47,53 @@ Ban CCB quyết định bổ sung giải pháp kỹ thuật chịu lỗi đa t�
 | **Nguyễn Bảo Quang Minh** | Frontend Lead / Người thực thi UI | **Chấp thuận** | [ký thật] |
 
 *Bằng chứng kèm theo: [link tin nhắn/log sự cố webhook thật, biên bản họp CCB].*
+
+---
+
+## YÊU CẦU THAY ĐỔI: CR-02 — THÊM CỔNG THANH TOÁN MOMO (THẺ VISA/MASTER VÀ QR)
+
+**Mã hồ sơ:** `CR-2026-GUGUGAGA-02`
+**Ngày khởi tạo:** 16/11/2026 (giai đoạn QTDA, sau bản beta v1.1.0-beta)
+**Người đề xuất:** Trần Phan Minh Tiến (Technical Lead)
+**Trạng thái:** Đã thực hiện trên nhánh `feat/momo-payment`; **chờ CCB xác nhận** (chữ ký bên dưới)
+
+### 1. Lý do đề xuất
+- Phạm vi gốc chỉ có COD và chuyển khoản VietQR/Casso. Bản demo không có tài khoản Casso, nên khoản thanh toán chỉ được xác nhận khi khách bấm nút "Tôi đã chuyển khoản".
+- Yêu cầu khi demo và bảo vệ: **không dùng tiền thật**, **thanh toán được bằng thẻ Visa**, và **có mã QR**.
+
+### 2. Phương án đã cân nhắc
+| Phương án | Kết quả thử ngày 16/11/2026 | Quyết định |
+|---|---|---|
+| VNPay Sandbox | Trang tự đăng ký `sandbox.vnpayment.vn/devreg` trả 404, phải liên hệ VNPay để có tài khoản | Loại vì không kịp tiến độ |
+| ZaloPay Sandbox | Tạo đơn thành công nhưng trang thanh toán báo "đang bảo trì" | Loại vì không ổn định |
+| **MoMo Sandbox** | Tạo đơn thành công cho cả ví/QR (có mã QR) lẫn thẻ (`payWithCC`); dùng khoá test công khai trong repo mẫu chính thức của MoMo | **Chọn** |
+
+### 3. Nội dung thay đổi
+- **Backend:**
+  - `POST /api/user/orders/:id/momo`: tạo phiên thanh toán ví/QR hoặc thẻ.
+  - `POST /api/payment/momo/ipn` và `GET /api/payment/momo/return`: kiểm chữ ký HMAC-SHA256, kiểm mã đối tác và số tiền, chống xử lý lặp. Thanh toán thành công thì đơn chuyển `PENDING` → `ACCEPTED`.
+  - Đơn `MOMO` được tạo ở trạng thái `PENDING`.
+- **App khách hàng (build 4):**
+  - Thêm phương thức "MoMo: thẻ Visa/Master hoặc quét QR".
+  - Thêm màn hình mở trang thanh toán MoMo; app tự kiểm tra trạng thái đơn để cập nhật.
+- **Giữ nguyên:** COD và VietQR.
+
+### 4. Đánh giá tác động
+- **Tiến độ:** khoảng 1 ngày làm việc (16/11). Không ảnh hưởng ngày nộp báo cáo (tuần sau).
+- **Chi phí:** 0 VNĐ (sandbox).
+- **Chất lượng:**
+  - Test tự động backend tăng từ 24 lên **32/32**.
+  - Đã kiểm thử luồng API qua URL công khai: đơn PENDING → tạo phiên ví và phiên thẻ → IPN hợp lệ đưa đơn sang ACCEPTED/PAID → IPN lặp lại không cập nhật lần 2 → IPN bị sửa số tiền bị từ chối.
+  - Thanh toán bằng thẻ test trên điện thoại: [CẦN BỔ SUNG kết quả thử].
+- **Rủi ro mới:**
+  - Phụ thuộc môi trường sandbox của MoMo (có thể bảo trì).
+  - IPN cần URL công khai: hiện dùng tunnel, URL đổi khi bật lại (xem R11).
+  - Khoá sandbox là khoá công khai, chỉ dùng cho demo, không dùng production.
+
+### 5. Phê duyệt của CCB
+| Thành viên CCB | Vai trò | Quyết định | Chữ ký xác nhận |
+|---|---|---|---|
+| **Võ Nhật Huy** | Project Lead / Chủ tịch CCB | [ ] | [ký thật] |
+| **Trần Phan Minh Tiến** | Technical Lead (người đề xuất) | [ ] | [ký thật] |
+| **Nguyễn Gia Bảo** | Backend & AI | [ ] | [ký thật] |
+| **Nguyễn Bảo Quang Minh** | Frontend | [ ] | [ký thật] |
