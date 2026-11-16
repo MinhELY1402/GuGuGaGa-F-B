@@ -35,7 +35,8 @@ export function isValidCassoToken(headers, expected = process.env.CASSO_SECURE_T
  * COD được chấp nhận ngay (ACCEPTED) để tài xế nhận đơn.
  */
 export function initialOrderStatus(paymentMethod) {
-  return String(paymentMethod).toUpperCase() === "BANKING" ? "PENDING" : "ACCEPTED";
+  // Chuyển khoản và MoMo phải chờ thanh toán; COD được chấp nhận ngay
+  return ["BANKING", "MOMO"].includes(String(paymentMethod).toUpperCase()) ? "PENDING" : "ACCEPTED";
 }
 
 /** Dữ liệu cập nhật khi xác nhận đã thanh toán: đơn đang chờ thì chuyển sang ACCEPTED. */
