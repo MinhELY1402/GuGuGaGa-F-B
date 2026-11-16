@@ -8,6 +8,7 @@ import '../../services/api_service.dart';
 
 import '../payment/payment_success_screen.dart';
 import 'bank_transfer_screen.dart';
+import 'momo_payment_screen.dart';
 
 import 'map_picker_screen.dart';
 
@@ -180,7 +181,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       });
 
       if (mounted) {
-        if (backendPaymentMethod == 'BANKING') {
+        if (backendPaymentMethod == 'MOMO') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MomoPaymentScreen(
+                orderId: order.id,
+                amount: order.totalAmount,
+              ),
+            ),
+          );
+        } else if (backendPaymentMethod == 'BANKING') {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => BankTransferScreen(
@@ -410,6 +420,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               RadioListTile<String>(
                 title: const Text('Tiền mặt (COD)'),
                 value: 'COD',
+                groupValue: _paymentMethod,
+                onChanged: (value) {
+                  setState(() {
+                    _paymentMethod = value!;
+                  });
+                },
+                contentPadding: EdgeInsets.zero,
+                activeColor: Colors.red.shade700,
+              ),
+              RadioListTile<String>(
+                title: const Text('MoMo: thẻ Visa/Master hoặc quét QR'),
+                subtitle: const Text('Cổng MoMo môi trường thử nghiệm, không trừ tiền thật'),
+                value: 'MOMO',
                 groupValue: _paymentMethod,
                 onChanged: (value) {
                   setState(() {

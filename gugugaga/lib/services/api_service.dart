@@ -317,6 +317,23 @@ class ApiService {
     throw Exception('Failed to load orders: ${response.body}');
   }
 
+  /// Tạo phiên thanh toán MoMo cho đơn MOMO. method: "wallet" (ví/QR) hoặc "card" (thẻ Visa/Master).
+  Future<Map<String, dynamic>> createMomoPayment(String orderId, String method, String token) async {
+    final response = await http.post(
+      Uri.parse('${AppConstants.baseUrl}/user/orders/$orderId/momo'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'method': method}),
+    );
+    final data = json.decode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) {
+      return Map<String, dynamic>.from(data['data']);
+    }
+    throw Exception(data['message'] ?? 'Không tạo được thanh toán MoMo');
+  }
+
   Future<Map<String, dynamic>> getOrderDetail(String orderId, String token) async {
     final response = await http.get(
       Uri.parse('${AppConstants.baseUrl}/user/orders/$orderId'),
