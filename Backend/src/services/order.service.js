@@ -1,7 +1,7 @@
 import db from "../configs/firestore.js";
 import { notificationService } from "./notification.service.js";
 import axios from "axios";
-import { extractShortOrderId, toShortOrderId, shouldMarkPaid } from "../utils/casso.js";
+import { extractShortOrderId, toShortOrderId, shouldMarkPaid, initialOrderStatus, paidUpdate } from "../utils/casso.js";
 
 const ordersRef = db.collection("orders");
 const driversRef = db.collection("drivers");
@@ -84,6 +84,7 @@ export const orderService = {
     }));
 
     const totalAmount = cart.totalAmount;
+    const status = initialOrderStatus(paymentMethod);
     const now = new Date();
 
     // Tạo order
@@ -91,7 +92,7 @@ export const orderService = {
       userId,
       branchId: cart.branchId,
       totalAmount,
-      status: "ACCEPTED",
+      status,
       paymentMethod,
       deliveryAddress,
       deliveryPhone,
@@ -122,7 +123,9 @@ export const orderService = {
       await notificationService.createNotification(
         userId,
         "Đặt hàng thành công",
-        `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} của bạn đã được đặt thành công. Cửa hàng đang chuẩn bị món ăn!`,
+        status === "PENDING"
+          ? `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} đã được tạo. Vui lòng chuyển khoản để cửa hàng bắt đầu chuẩn bị món.`
+          : `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} của bạn đã được đặt thành công. Cửa hàng đang chuẩn bị món ăn!`,
         orderRef.id
       );
     } catch (err) {
@@ -134,7 +137,7 @@ export const orderService = {
       userId,
       branchId: cart.branchId,
       totalAmount,
-      status: "ACCEPTED",
+      status,
       paymentMethod,
       deliveryAddress,
       deliveryPhone,
@@ -300,10 +303,7 @@ export const orderService = {
 
     // Nếu forced (người dùng bấm nút) hoặc chưa cấu hình API Key đối soát -> Tự động duyệt thành công
     if (force || !cassoApiKey) {
-      await orderRef.update({
-        paymentStatus: "PAID",
-        updatedAt: new Date(),
-      });
+      await orderRef.update(paidUpdate(orderData));
 
       const shortOrderId = orderId.length > 8
           ? orderId.substring(orderId.length - 8)
@@ -361,10 +361,7 @@ export const orderService = {
 
         if (match) {
           // Cập nhật trạng thái trong DB
-          await orderRef.update({
-            paymentStatus: "PAID",
-            updatedAt: new Date(),
-          });
+          await orderRef.update(paidUpdate(orderData));
 
           // Gửi thông báo chuyển khoản thành công
           try {
@@ -423,10 +420,7 @@ export const orderService = {
           const orderData = matchedOrderDoc.data();
 
           if (shouldMarkPaid(orderData, amount)) {
-            await orderRef.update({
-              paymentStatus: "PAID",
-              updatedAt: new Date(),
-            });
+            await orderRef.update(paidUpdate(orderData));
 
             // Send notification
             try {

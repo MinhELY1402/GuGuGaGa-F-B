@@ -29,3 +29,20 @@ export function isValidCassoToken(headers, expected = process.env.CASSO_SECURE_T
   const received = headers?.["secure-token"] ?? headers?.["Secure-Token"];
   return received === expected;
 }
+
+/**
+ * Trạng thái ban đầu của đơn: chuyển khoản phải chờ thanh toán (PENDING),
+ * COD được chấp nhận ngay (ACCEPTED) để tài xế nhận đơn.
+ */
+export function initialOrderStatus(paymentMethod) {
+  return String(paymentMethod).toUpperCase() === "BANKING" ? "PENDING" : "ACCEPTED";
+}
+
+/** Dữ liệu cập nhật khi xác nhận đã thanh toán: đơn đang chờ thì chuyển sang ACCEPTED. */
+export function paidUpdate(order, now = new Date()) {
+  return {
+    paymentStatus: "PAID",
+    updatedAt: now,
+    ...(order?.status === "PENDING" ? { status: "ACCEPTED" } : {}),
+  };
+}
