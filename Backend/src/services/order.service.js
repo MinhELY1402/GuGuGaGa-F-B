@@ -301,8 +301,14 @@ export const orderService = {
 
     const cassoApiKey = process.env.CASSO_API_KEY;
 
-    // Nếu forced (người dùng bấm nút) hoặc chưa cấu hình API Key đối soát -> Tự động duyệt thành công
-    if (force || !cassoApiKey) {
+    // Chưa cấu hình Casso: không thể đối soát tự động. Lần hỏi tự động (polling) chỉ trả "chưa thanh toán";
+    // chỉ khi người dùng bấm "Tôi đã chuyển khoản" (force) mới xác nhận — chế độ demo.
+    if (!force && !cassoApiKey) {
+      return { paid: false };
+    }
+
+    // Người dùng bấm nút xác nhận (force) -> duyệt thành công
+    if (force) {
       await orderRef.update(paidUpdate(orderData));
 
       const shortOrderId = orderId.length > 8
