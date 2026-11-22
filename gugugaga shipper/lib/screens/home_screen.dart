@@ -16,6 +16,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final _apiService = ApiService();
   List<dynamic> _myOrders = [];
+  // Bộ lọc tab "Của tôi" và các đơn tài xế đã ẩn khỏi danh sách (chỉ lưu trên máy này, không xoá dữ liệu).
+  String _myFilter = 'ACTIVE'; // ACTIVE | DONE | ALL
+  Set<String> _hiddenIds = {};
+
   List<dynamic> _availableOrders = [];
   List<dynamic> _myReviews = [];
   double _averageRating = 0.0;
@@ -30,8 +34,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadDriverInfo();
+    _loadHidden();
     _fetchAll();
   }
+
+  Future<void> _loadHidden() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) setState(() => _hiddenIds = (prefs.getStringList('hidden_orders') ?? []).toSet());
+  }
+
+  Future<void> _hideOrders(Iterable<String> ids) async {
+    setState(() => _hiddenIds = {..._hiddenIds, ...ids});
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('hidden_orders', _hiddenIds.toList());
+  }
+
 
   @override
   void dispose() {
@@ -311,12 +328,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       color: const Color(0xFFFF6B00),
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 0, bottom: 80),
-        itemCount: _availableOrders.length + 1,
+        itemCount: _visibleAvailable.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) return _buildStatsBar();
-          final order = _availableOrders[index - 1];
+          final order = _visibleAvailable[index - 1];
           final branch = order['branch'];
-          return Card(
+          return _swipeToHide(order['id'].toString(), Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () {},
@@ -396,8 +413,139 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
             ),
-          );
+          ));
         },
+      ),
+    );
+  }
+
+  List<dynamic> get _visibleAvailable =>
+      _availableOrders.where((o) => !_hiddenIds.contains(o['id'].toString())).toList();
+
+  bool _isHiddenMine(dynamic o) => o['hiddenByDriver'] == true || _hiddenIds.contains(o['id'].toString());
+
+  bool _isDone(dynamic o) => o['status'] == 'DELIVERED' || o['status'] == 'CANCELLED';
+
+  List<dynamic> get _filteredMine {
+    final list = _myOrders.where((o) => !_isHiddenMine(o));
+    switch (_myFilter) {
+      case 'ACTIVE':
+        return list.where((o) => !_isDone(o)).toList();
+      case 'DONE':
+        return list.where(_isDone).toList();
+      default:
+        return list.toList();
+    }
+  }
+
+  /// Vuốt ngang để ẩn đơn khỏi danh sách (không xoá trên server).
+  Widget _swipeToHide(String id, Widget child, {bool server = false}) {
+    return Dismissible(
+      key: ValueKey('order_$id'),
+      background: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(16)),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        child: const Icon(Icons.visibility_off, color: Colors.white),
+      ),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(16)),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.visibility_off, color: Colors.white),
+      ),
+      onDismissed: (_) async {
+        if (server) {
+          // Đơn đã xong: xoá khỏi lịch sử trên server (giữ dữ liệu đơn, chỉ gắn cờ)
+          _hideOrders([id]); // ẩn ngay trên màn hình, tránh thẻ bị dựng lại
+          try {
+            await _apiService.hideHistory(ids: [id]);
+            await _fetchAll(silent: true);
+          } catch (e) {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xoá đơn khỏi lịch sử')));
+          }
+          return;
+        }
+        _hideOrders([id]);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Đã ẩn đơn khỏi danh sách'),
+          action: SnackBarAction(
+            label: 'Hoàn tác',
+            onPressed: () async {
+              setState(() => _hiddenIds = _hiddenIds.where((e) => e != id).toSet());
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setStringList('hidden_orders', _hiddenIds.toList());
+            },
+          ),
+        ));
+      },
+      child: child,
+    );
+  }
+
+  Future<void> _confirmClearHistory(int count) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá lịch sử đơn đã xong?'),
+        content: Text('$count đơn đã giao/đã hủy sẽ biến mất khỏi danh sách của bạn. Thu nhập và số đơn hoàn thành vẫn được tính.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Giữ lại')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Xoá', style: TextStyle(color: Colors.red.shade700)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await _apiService.hideHistory(all: true);
+      await _fetchAll(silent: true);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xoá lịch sử')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  Widget _buildMyFilterBar() {
+    final mine = _myOrders.where((o) => !_isHiddenMine(o)).toList();
+    final active = mine.where((o) => !_isDone(o)).length;
+    final done = mine.where(_isDone).length;
+    Widget chip(String key, String label) => Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: ChoiceChip(
+            label: Text(label),
+            selected: _myFilter == key,
+            selectedColor: Colors.orange.shade100,
+            onSelected: (_) => setState(() => _myFilter = key),
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: [
+                chip('ACTIVE', 'Đang giao ($active)'),
+                chip('DONE', 'Đã xong ($done)'),
+                chip('ALL', 'Tất cả (${mine.length})'),
+              ]),
+            ),
+          ),
+          if (done > 0 && _myFilter != 'ACTIVE')
+            TextButton(
+              onPressed: () => _confirmClearHistory(done),
+              child: Text('Xoá lịch sử', style: TextStyle(color: Colors.red.shade700)),
+            ),
+        ],
       ),
     );
   }
@@ -420,13 +568,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       color: const Color(0xFFFF6B00),
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 0, bottom: 80),
-        itemCount: _myOrders.length + 1,
+        itemCount: _filteredMine.length + 2,
         itemBuilder: (context, index) {
           if (index == 0) return _buildStatsBar();
-          final order = _myOrders[index - 1];
+          if (index == 1) return _buildMyFilterBar();
+          final order = _filteredMine[index - 2];
           final status = order['status'] ?? '';
           final statusColor = _getStatusColor(status);
-          return Card(
+          final card = Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () {
@@ -504,6 +653,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
           );
+          // Chỉ đơn đã xong mới được vuốt để ẩn; đơn đang giao thì giữ nguyên
+          return _isDone(order) ? _swipeToHide(order['id'].toString(), card, server: true) : card;
         },
       ),
     );

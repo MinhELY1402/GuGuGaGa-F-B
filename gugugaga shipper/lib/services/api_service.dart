@@ -32,6 +32,24 @@ class ApiService {
     throw Exception('Đăng nhập thất bại: ${response.body}');
   }
 
+  /// Xoá đơn đã xong khỏi lịch sử của tài xế (server chỉ gắn cờ, không xoá dữ liệu đơn).
+  Future<void> hideHistory({List<String>? ids, bool all = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) throw Exception('Chưa đăng nhập');
+    final response = await http.post(
+      Uri.parse('${AppConstants.baseUrl}/shipper/orders/history/hide'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'ids': ids ?? [], 'all': all}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Không xoá được lịch sử (${response.statusCode})');
+    }
+  }
+
   Future<List<dynamic>> getAssignedOrders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
