@@ -26,6 +26,45 @@ export const paymentController = {
     }
   },
 
+  /** POST /api/user/orders/:id/pay/qr — mã QR hiển thị trong app */
+  async createQr(req, res) {
+    try {
+      return ApiResponse.success(res, await paymentService.createQr(req.params.id, req.user.id, publicBaseUrl(req)), "Đã tạo mã QR");
+    } catch (error) {
+      console.error("[createQr]", error.message);
+      return ApiResponse.error(res, error, error.status || 400);
+    }
+  },
+
+  /** POST /api/user/orders/:id/pay/qr/simulate — mô phỏng khách đã quét và thanh toán */
+  async simulateQr(req, res) {
+    try {
+      return ApiResponse.success(res, await paymentService.simulateQrPaid(req.params.id, req.user.id), "Thanh toán QR (mô phỏng) thành công");
+    } catch (error) {
+      return ApiResponse.error(res, error, error.status || 400);
+    }
+  },
+
+  /** POST /api/user/orders/:id/pay/card { number, expiry, cvv, name } — bước 1, chờ OTP. Không ghi log dữ liệu thẻ. */
+  async startCard(req, res) {
+    try {
+      const { number, expiry, cvv, name } = req.body || {};
+      return ApiResponse.success(res, await paymentService.startCardPayment(req.params.id, req.user.id, { number, expiry, cvv, name }), "Nhập mã OTP để hoàn tất");
+    } catch (error) {
+      return ApiResponse.error(res, error, error.status || 400);
+    }
+  },
+
+  /** POST /api/user/orders/:id/pay/card/confirm { paymentId, otp } */
+  async confirmCard(req, res) {
+    try {
+      const { paymentId, otp } = req.body || {};
+      return ApiResponse.success(res, await paymentService.confirmCardPayment(req.params.id, req.user.id, paymentId, otp), "Thanh toán thẻ (mô phỏng) thành công");
+    } catch (error) {
+      return ApiResponse.error(res, error, error.status || 400);
+    }
+  },
+
   /** POST /api/payment/momo/ipn — MoMo gọi server-to-server; luôn trả 204 nếu chữ ký hợp lệ */
   async momoIpn(req, res) {
     try {

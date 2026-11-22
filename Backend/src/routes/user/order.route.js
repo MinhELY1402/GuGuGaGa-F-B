@@ -20,6 +20,12 @@ routerOrder.get("/:id/check-payment", orderController.checkPayment);
 // Tạo phiên thanh toán MoMo (ví/QR hoặc thẻ Visa) cho đơn MOMO
 routerOrder.post("/:id/momo", paymentController.createMomo);
 
+// Thanh toán online ngay trong app: mã QR và thẻ Visa/Master (cổng mô phỏng, bật bằng PAYMENT_SIMULATOR=1)
+routerOrder.post("/:id/pay/qr", paymentController.createQr);
+routerOrder.post("/:id/pay/qr/simulate", paymentController.simulateQr);
+routerOrder.post("/:id/pay/card", paymentController.startCard);
+routerOrder.post("/:id/pay/card/confirm", paymentController.confirmCard);
+
 // Lấy chi tiết đơn hàng
 routerOrder.get("/:id", orderController.getOrderDetail);
 

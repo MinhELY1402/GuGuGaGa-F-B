@@ -109,3 +109,10 @@ test("MoMo return với chữ ký sai → trang 'chưa hoàn tất'", async () =
   assert.equal(res.status, 200);
   assert.match(res.text, /chưa hoàn tất/);
 });
+
+test("Thanh toán online trong app: mọi route mới cần đăng nhập → 401", async () => {
+  for (const path of ["/pay/qr", "/pay/qr/simulate", "/pay/card", "/pay/card/confirm"]) {
+    const res = await request(app).post(`/api/user/orders/abc${path}`).send({});
+    assert.equal(res.status, 401, path);
+  }
+});
