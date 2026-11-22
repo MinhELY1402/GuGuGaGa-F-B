@@ -20,9 +20,13 @@ class _CartScreenState extends State<CartScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
-      if (authProvider.isAuthenticated && authProvider.selectedBranch != null && authProvider.token != null) {
-        print('DEBUG: CartScreen - Loading cart for branch ${authProvider.selectedBranch!.id}');
-        cartProvider.loadCart(authProvider.selectedBranch!.id, authProvider.token!);
+      if (authProvider.isAuthenticated &&
+          authProvider.selectedBranch != null &&
+          authProvider.token != null) {
+        print(
+            'DEBUG: CartScreen - Loading cart for branch ${authProvider.selectedBranch!.id}');
+        cartProvider.loadCart(
+            authProvider.selectedBranch!.id, authProvider.token!);
       }
     });
   }
@@ -171,8 +175,8 @@ class _CartItemCard extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 color: item.combo != null
                     ? Colors.orange.shade50
@@ -211,99 +215,120 @@ class _CartItemCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
+            // Tên + nút xoá ở hàng trên, giá ở giữa, số lượng + thành tiền ở hàng dưới
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (item.combo != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade700,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'COMBO',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (item.combo != null)
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade700,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'COMBO',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                              ),
+                            Text(
+                              item.name,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  if (item.combo != null) const SizedBox(height: 4),
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                      IconButton(
+                        onPressed: () {
+                          cartProvider.removeItem(index,
+                              token: authProvider.token);
+                        },
+                        icon: const Icon(Icons.delete_outline),
+                        color: Colors.red,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
+                        tooltip: 'Xoá khỏi giỏ',
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     currencyFormat.format(item.price),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          cartProvider.updateQuantity(index, item.quantity - 1,
+                              token: authProvider.token);
+                        },
+                        icon: const Icon(Icons.remove_circle_outline),
+                        iconSize: 24,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
+                      ),
+                      SizedBox(
+                        width: 32,
+                        child: Text(
+                          '${item.quantity}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          cartProvider.updateQuantity(index, item.quantity + 1,
+                              token: authProvider.token);
+                        },
+                        icon: const Icon(Icons.add_circle_outline),
+                        iconSize: 24,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
+                      ),
+                      const Spacer(),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            currencyFormat.format(item.totalPrice),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ),
-            Column(
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        cartProvider.updateQuantity(index, item.quantity - 1, token: authProvider.token);
-                      },
-                      icon: const Icon(Icons.remove_circle_outline),
-                      iconSize: 24,
-                    ),
-                    Container(
-                      width: 40,
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${item.quantity}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        cartProvider.updateQuantity(index, item.quantity + 1, token: authProvider.token);
-                      },
-                      icon: const Icon(Icons.add_circle_outline),
-                      iconSize: 24,
-                    ),
-                  ],
-                ),
-                Text(
-                  currencyFormat.format(item.totalPrice),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: () {
-                cartProvider.removeItem(index, token: authProvider.token);
-              },
-              icon: const Icon(Icons.delete_outline),
-              color: Colors.red,
             ),
           ],
         ),
@@ -311,4 +336,3 @@ class _CartItemCard extends StatelessWidget {
     );
   }
 }
-

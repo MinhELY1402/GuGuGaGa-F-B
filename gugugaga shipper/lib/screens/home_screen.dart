@@ -145,6 +145,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
+  /// Mã đơn rút gọn: 6 ký tự cuối, viết hoa (khớp thông báo cho khách).
+  String _shortId(dynamic id) {
+    final t = id.toString();
+    return (t.length > 6 ? t.substring(t.length - 6) : t).toUpperCase();
+  }
+
   String _getStatusText(String status) {
     switch (status) {
       case 'PENDING':
@@ -226,6 +232,65 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  /// Danh sách món trong đơn và thông tin thu tiền (COD thu hộ, đơn online đã thanh toán).
+  Widget _buildOrderContents(Map order) {
+    final items = (order['orderItem'] as List?) ?? const [];
+    final isCod = (order['paymentMethod'] ?? '').toString().toUpperCase() == 'COD';
+    final paid = order['paymentStatus'] == 'PAID';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Món cần giao', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+          const SizedBox(height: 6),
+          if (items.isEmpty)
+            Text('Không có thông tin món', style: TextStyle(color: Colors.grey.shade600, fontSize: 13))
+          else
+            ...items.map((item) {
+              final name = item['product'] != null
+                  ? item['product']['name']
+                  : (item['combo'] != null ? item['combo']['name'] : 'N/A');
+              final isCombo = item['combo'] != null;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${item['quantity']}x ', style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFFF6B00))),
+                    Expanded(child: Text('$name${isCombo ? ' (Combo)' : ''}', style: const TextStyle(fontSize: 14))),
+                  ],
+                ),
+              );
+            }),
+          const Divider(height: 16),
+          Row(
+            children: [
+              Icon(isCod && !paid ? Icons.payments_outlined : Icons.verified_outlined,
+                  size: 18, color: isCod && !paid ? Colors.red.shade700 : Colors.green.shade700),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  isCod && !paid ? 'Thu tiền mặt: ${order['totalAmount']}đ' : 'Đã thanh toán, không thu tiền',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: isCod && !paid ? Colors.red.shade700 : Colors.green.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAvailableOrderList() {
     if (_availableOrders.isEmpty) {
       return Center(
@@ -264,7 +329,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
+                        Expanded(
+                          child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
@@ -275,15 +341,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               child: const Icon(Icons.receipt_long, color: Color(0xFFFF6B00), size: 20),
                             ),
                             const SizedBox(width: 10),
-                            Column(
+                            Expanded(child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Đơn #${order['id']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                                Text('Đơn #${_shortId(order['id'])}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                                 Text('${order['totalAmount']}đ', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600, fontSize: 14)),
                               ],
-                            ),
+                            )),
                           ],
                         ),
+                        ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
@@ -304,6 +372,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     _buildInfoRow(Icons.location_on, 'Giao đến', order['deliveryAddress'] ?? ''),
                     const SizedBox(height: 8),
                     _buildInfoRow(Icons.phone, 'SĐT khách', order['deliveryPhone'] ?? ''),
+                    const SizedBox(height: 12),
+                    // Món cần giao + tiền cần thu: tài xế xem trước khi quyết định nhận đơn
+                    _buildOrderContents(order),
                     const SizedBox(height: 14),
                     // Accept button
                     SizedBox(
@@ -372,7 +443,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
+                        Expanded(
+                          child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
@@ -383,15 +455,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               child: Icon(_getStatusIcon(status), color: statusColor, size: 20),
                             ),
                             const SizedBox(width: 10),
-                            Column(
+                            Expanded(child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Đơn #${order['id']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                                Text('Đơn #${_shortId(order['id'])}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                                 Text('${order['totalAmount']}đ', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600)),
                               ],
-                            ),
+                            )),
                           ],
                         ),
+                        ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(

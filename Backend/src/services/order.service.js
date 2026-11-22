@@ -1,7 +1,7 @@
 import db from "../configs/firestore.js";
 import { notificationService } from "./notification.service.js";
 import axios from "axios";
-import { extractShortOrderId, toShortOrderId, shouldMarkPaid } from "../utils/casso.js";
+import { extractShortOrderId, toShortOrderId, shouldMarkPaid, initialOrderStatus, paidUpdate } from "../utils/casso.js";
 
 const ordersRef = db.collection("orders");
 const driversRef = db.collection("drivers");
@@ -84,6 +84,7 @@ export const orderService = {
     }));
 
     const totalAmount = cart.totalAmount;
+    const status = initialOrderStatus(paymentMethod);
     const now = new Date();
 
     // Tạo order
@@ -91,7 +92,7 @@ export const orderService = {
       userId,
       branchId: cart.branchId,
       totalAmount,
-      status: "ACCEPTED",
+      status,
       paymentMethod,
       deliveryAddress,
       deliveryPhone,
@@ -122,7 +123,9 @@ export const orderService = {
       await notificationService.createNotification(
         userId,
         "Đặt hàng thành công",
-        `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} của bạn đã được đặt thành công. Cửa hàng đang chuẩn bị món ăn!`,
+        ["BANKING", "MOMO"].includes(String(paymentMethod).toUpperCase())
+          ? `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} đã được tạo. Vui lòng thanh toán để cửa hàng xác nhận đơn.`
+          : `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} của bạn đã được đặt thành công. Đơn đang chờ cửa hàng xác nhận.`,
         orderRef.id
       );
     } catch (err) {
@@ -134,7 +137,7 @@ export const orderService = {
       userId,
       branchId: cart.branchId,
       totalAmount,
-      status: "ACCEPTED",
+      status,
       paymentMethod,
       deliveryAddress,
       deliveryPhone,
@@ -298,12 +301,15 @@ export const orderService = {
 
     const cassoApiKey = process.env.CASSO_API_KEY;
 
-    // Nếu forced (người dùng bấm nút) hoặc chưa cấu hình API Key đối soát -> Tự động duyệt thành công
-    if (force || !cassoApiKey) {
-      await orderRef.update({
-        paymentStatus: "PAID",
-        updatedAt: new Date(),
-      });
+    // Chưa cấu hình Casso: không thể đối soát tự động. Lần hỏi tự động (polling) chỉ trả "chưa thanh toán";
+    // chỉ khi người dùng bấm "Tôi đã chuyển khoản" (force) mới xác nhận — chế độ demo.
+    if (!force && !cassoApiKey) {
+      return { paid: false };
+    }
+
+    // Người dùng bấm nút xác nhận (force) -> duyệt thành công
+    if (force) {
+      await orderRef.update(paidUpdate(orderData));
 
       const shortOrderId = orderId.length > 8
           ? orderId.substring(orderId.length - 8)
@@ -313,7 +319,7 @@ export const orderService = {
         await notificationService.createNotification(
           orderData.userId,
           "Thanh toán thành công",
-          `Đơn hàng #${shortOrderId} đã được xác nhận thanh toán thành công. Cửa hàng đang chuẩn bị món ăn!`,
+          `Đơn hàng #${shortOrderId} đã được xác nhận thanh toán thành công. Đơn đang chờ cửa hàng xác nhận.`,
           orderId
         );
       } catch (err) {
@@ -361,17 +367,14 @@ export const orderService = {
 
         if (match) {
           // Cập nhật trạng thái trong DB
-          await orderRef.update({
-            paymentStatus: "PAID",
-            updatedAt: new Date(),
-          });
+          await orderRef.update(paidUpdate(orderData));
 
           // Gửi thông báo chuyển khoản thành công
           try {
             await notificationService.createNotification(
               orderData.userId,
               "Thanh toán thành công",
-              `Đã nhận được tiền chuyển khoản ${expectedAmount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId}. Cửa hàng đang chuẩn bị món ăn!`,
+              `Đã nhận được tiền chuyển khoản ${expectedAmount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId}. Đơn đang chờ cửa hàng xác nhận.`,
               orderId
             );
           } catch (err) {
@@ -423,17 +426,14 @@ export const orderService = {
           const orderData = matchedOrderDoc.data();
 
           if (shouldMarkPaid(orderData, amount)) {
-            await orderRef.update({
-              paymentStatus: "PAID",
-              updatedAt: new Date(),
-            });
+            await orderRef.update(paidUpdate(orderData));
 
             // Send notification
             try {
               await notificationService.createNotification(
                 orderData.userId,
                 "Thanh toán thành công",
-                `Đã nhận được tiền chuyển khoản ${amount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId} (nhận qua Webhook). Cửa hàng đang chuẩn bị món ăn!`,
+                `Đã nhận được tiền chuyển khoản ${amount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId} (nhận qua Webhook). Đơn đang chờ cửa hàng xác nhận.`,
                 matchedOrderDoc.id
               );
             } catch (err) {

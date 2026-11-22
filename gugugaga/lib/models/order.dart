@@ -80,7 +80,7 @@ class Order {
       case PaymentMethod.banking:
         return 'Chuyển khoản';
       case PaymentMethod.momo:
-        return 'Momo';
+        return 'Thẻ / QR (online)';
       case PaymentMethod.vnpay:
         return 'VNPay';
     }
