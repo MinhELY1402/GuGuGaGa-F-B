@@ -1,3 +1,4 @@
+import { selectHideable } from "../utils/history.js";
 import db from "../configs/firestore.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -161,6 +162,17 @@ export const shipperService = {
       return timeB - timeA;
     });
     return orders;
+  },
+
+  // Xoá đơn đã xong khỏi lịch sử của tài xế (gắn cờ hiddenByDriver, không xoá dữ liệu đơn)
+  hideHistory: async (driverId, { ids, all } = {}) => {
+    const snap = await ordersRef.where("driverId", "==", driverId).get();
+    const all_ = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const targets = selectHideable(all_, driverId, { ids, all });
+    const batch = db.batch();
+    for (const o of targets) batch.update(ordersRef.doc(o.id), { hiddenByDriver: true });
+    if (targets.length) await batch.commit();
+    return { hidden: targets.length };
   },
 
   // Chỉ đơn đang giao (DRIVER_ASSIGNED) của tài xế

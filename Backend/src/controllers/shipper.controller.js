@@ -46,6 +46,16 @@ export const shipperController = {
     }
   },
 
+  hideHistory: async (req, res) => {
+    try {
+      const { ids, all } = req.body || {};
+      const result = await shipperService.hideHistory(req.user.id, { ids, all: all === true });
+      return ApiResponse.success(res, result, "Đã xoá khỏi lịch sử");
+    } catch (error) {
+      return ApiResponse.error(res, error);
+    }
+  },
+
   getAssignedOrders: async (req, res) => {
     try {
       console.log("getAssignedOrders called. User:", req.user);
