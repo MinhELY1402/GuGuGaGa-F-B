@@ -8,7 +8,7 @@ import '../../services/api_service.dart';
 
 import '../payment/payment_success_screen.dart';
 import 'bank_transfer_screen.dart';
-import 'momo_payment_screen.dart';
+import 'online_payment_screen.dart';
 
 import 'map_picker_screen.dart';
 
@@ -184,7 +184,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         if (backendPaymentMethod == 'MOMO') {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => MomoPaymentScreen(
+              builder: (context) => OnlinePaymentScreen(
                 orderId: order.id,
                 amount: order.totalAmount,
               ),
@@ -430,8 +430,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 activeColor: Colors.red.shade700,
               ),
               RadioListTile<String>(
-                title: const Text('MoMo: thẻ Visa/Master hoặc quét QR'),
-                subtitle: const Text('Cổng MoMo môi trường thử nghiệm, không trừ tiền thật'),
+                title: const Text('Thanh toán online: thẻ Visa/Master hoặc quét QR'),
+                subtitle: const Text('Cổng thử nghiệm (mô phỏng), không trừ tiền thật'),
                 value: 'MOMO',
                 groupValue: _paymentMethod,
                 onChanged: (value) {

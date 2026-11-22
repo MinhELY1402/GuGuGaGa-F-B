@@ -317,22 +317,45 @@ class ApiService {
     throw Exception('Failed to load orders: ${response.body}');
   }
 
-  /// Tạo phiên thanh toán MoMo cho đơn MOMO. method: "wallet" (ví/QR) hoặc "card" (thẻ Visa/Master).
-  Future<Map<String, dynamic>> createMomoPayment(String orderId, String method, String token) async {
+  Future<Map<String, dynamic>> _postPayment(String path, Map<String, dynamic> body, String token) async {
     final response = await http.post(
-      Uri.parse('${AppConstants.baseUrl}/user/orders/$orderId/momo'),
+      Uri.parse('${AppConstants.baseUrl}$path'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: json.encode({'method': method}),
+      body: json.encode(body),
     );
     final data = json.decode(response.body);
     if (response.statusCode == 200 && data['success'] == true) {
-      return Map<String, dynamic>.from(data['data']);
+      return Map<String, dynamic>.from(data['data'] ?? {});
     }
-    throw Exception(data['message'] ?? 'Không tạo được thanh toán MoMo');
+    throw Exception(data['message'] ?? 'Thanh toán thất bại (${response.statusCode})');
   }
+
+  /// Mã QR hiển thị ngay trong app. source: "momo" (mã thật của MoMo) hoặc "simulator".
+  Future<Map<String, dynamic>> createPaymentQr(String orderId, String token) =>
+      _postPayment('/user/orders/$orderId/pay/qr', {}, token);
+
+  /// Mô phỏng: khách đã quét QR và thanh toán (chỉ khi server bật cổng mô phỏng).
+  Future<void> simulateQrPaid(String orderId, String token) =>
+      _postPayment('/user/orders/$orderId/pay/qr/simulate', {}, token);
+
+  /// Bước 1 thanh toán thẻ (cổng mô phỏng): trả về paymentId để nhập OTP.
+  Future<Map<String, dynamic>> startCardPayment(
+    String orderId,
+    String token, {
+    required String number,
+    required String expiry,
+    required String cvv,
+    required String name,
+  }) =>
+      _postPayment('/user/orders/$orderId/pay/card',
+          {'number': number, 'expiry': expiry, 'cvv': cvv, 'name': name}, token);
+
+  /// Bước 2: nhập OTP để hoàn tất.
+  Future<Map<String, dynamic>> confirmCardPayment(String orderId, String token, String paymentId, String otp) =>
+      _postPayment('/user/orders/$orderId/pay/card/confirm', {'paymentId': paymentId, 'otp': otp}, token);
 
   Future<Map<String, dynamic>> getOrderDetail(String orderId, String token) async {
     final response = await http.get(
