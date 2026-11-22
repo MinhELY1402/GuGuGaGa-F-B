@@ -123,9 +123,9 @@ export const orderService = {
       await notificationService.createNotification(
         userId,
         "Đặt hàng thành công",
-        status === "PENDING"
-          ? `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} đã được tạo. Vui lòng chuyển khoản để cửa hàng bắt đầu chuẩn bị món.`
-          : `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} của bạn đã được đặt thành công. Cửa hàng đang chuẩn bị món ăn!`,
+        ["BANKING", "MOMO"].includes(String(paymentMethod).toUpperCase())
+          ? `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} đã được tạo. Vui lòng thanh toán để cửa hàng xác nhận đơn.`
+          : `Đơn hàng #${orderRef.id.substring(orderRef.id.length - 6)} của bạn đã được đặt thành công. Đơn đang chờ cửa hàng xác nhận.`,
         orderRef.id
       );
     } catch (err) {
@@ -319,7 +319,7 @@ export const orderService = {
         await notificationService.createNotification(
           orderData.userId,
           "Thanh toán thành công",
-          `Đơn hàng #${shortOrderId} đã được xác nhận thanh toán thành công. Cửa hàng đang chuẩn bị món ăn!`,
+          `Đơn hàng #${shortOrderId} đã được xác nhận thanh toán thành công. Đơn đang chờ cửa hàng xác nhận.`,
           orderId
         );
       } catch (err) {
@@ -374,7 +374,7 @@ export const orderService = {
             await notificationService.createNotification(
               orderData.userId,
               "Thanh toán thành công",
-              `Đã nhận được tiền chuyển khoản ${expectedAmount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId}. Cửa hàng đang chuẩn bị món ăn!`,
+              `Đã nhận được tiền chuyển khoản ${expectedAmount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId}. Đơn đang chờ cửa hàng xác nhận.`,
               orderId
             );
           } catch (err) {
@@ -433,7 +433,7 @@ export const orderService = {
               await notificationService.createNotification(
                 orderData.userId,
                 "Thanh toán thành công",
-                `Đã nhận được tiền chuyển khoản ${amount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId} (nhận qua Webhook). Cửa hàng đang chuẩn bị món ăn!`,
+                `Đã nhận được tiền chuyển khoản ${amount.toLocaleString('vi-VN')}₫ cho đơn hàng #${shortOrderId} (nhận qua Webhook). Đơn đang chờ cửa hàng xác nhận.`,
                 matchedOrderDoc.id
               );
             } catch (err) {

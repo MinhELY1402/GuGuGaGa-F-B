@@ -41,6 +41,6 @@ test("momoRequestType: thẻ → payWithCC, mặc định → captureWallet (ví
   assert.equal(momoRequestType(undefined), "captureWallet");
 });
 
-test("Đơn MOMO bắt đầu ở PENDING như chuyển khoản", () => {
+test("Đơn MOMO bắt đầu ở PENDING như mọi đơn khác", () => {
   assert.equal(initialOrderStatus("MOMO"), "PENDING");
 });

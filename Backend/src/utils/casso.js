@@ -31,19 +31,15 @@ export function isValidCassoToken(headers, expected = process.env.CASSO_SECURE_T
 }
 
 /**
- * Trạng thái ban đầu của đơn: chuyển khoản phải chờ thanh toán (PENDING),
- * COD được chấp nhận ngay (ACCEPTED) để tài xế nhận đơn.
+ * Trạng thái ban đầu của đơn: MỌI đơn đều vào "Chờ xác nhận" (PENDING),
+ * cửa hàng/admin xác nhận thì mới chuyển sang ACCEPTED để tài xế nhận đơn.
+ * Thanh toán (paymentStatus) tách riêng khỏi trạng thái xử lý đơn.
  */
-export function initialOrderStatus(paymentMethod) {
-  // Chuyển khoản và MoMo phải chờ thanh toán; COD được chấp nhận ngay
-  return ["BANKING", "MOMO"].includes(String(paymentMethod).toUpperCase()) ? "PENDING" : "ACCEPTED";
+export function initialOrderStatus(_paymentMethod) {
+  return "PENDING";
 }
 
-/** Dữ liệu cập nhật khi xác nhận đã thanh toán: đơn đang chờ thì chuyển sang ACCEPTED. */
-export function paidUpdate(order, now = new Date()) {
-  return {
-    paymentStatus: "PAID",
-    updatedAt: now,
-    ...(order?.status === "PENDING" ? { status: "ACCEPTED" } : {}),
-  };
+/** Dữ liệu cập nhật khi xác nhận đã thanh toán: chỉ đổi paymentStatus, KHÔNG tự chấp nhận đơn. */
+export function paidUpdate(_order, now = new Date()) {
+  return { paymentStatus: "PAID", updatedAt: now };
 }

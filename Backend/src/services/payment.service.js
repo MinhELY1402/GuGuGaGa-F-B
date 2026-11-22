@@ -22,7 +22,7 @@ async function loadPayableOrder(orderId, userId) {
   return { ref: doc.ref, order };
 }
 
-/** Đánh dấu đã thanh toán, chuyển đơn PENDING -> ACCEPTED và báo cho khách. */
+/** Đánh dấu đã thanh toán, báo cho khách (đơn vẫn chờ cửa hàng xác nhận). */
 async function markPaid(orderId, order, extra, message) {
   await ordersRef.doc(orderId).update({ ...paidUpdate(order), ...extra });
   try {
@@ -105,7 +105,7 @@ export const paymentService = {
     await markPaid(
       orderId, order,
       { momoTransId: String(body.transId), momoPayType: body.payType || null },
-      `Đơn hàng #${toShortOrderId(orderId)} đã được thanh toán qua MoMo. Cửa hàng đang chuẩn bị món ăn!`
+      `Đơn hàng #${toShortOrderId(orderId)} đã được thanh toán qua MoMo. Đơn đang chờ cửa hàng xác nhận.`
     );
     return { ok: true, paid: true, orderId };
   },
@@ -139,7 +139,7 @@ export const paymentService = {
     if (!simulatorEnabled()) throw httpError(403, "Cổng mô phỏng đang tắt");
     const { order } = await loadPayableOrder(orderId, userId);
     await markPaid(orderId, order, { paymentChannel: "SIMULATOR_QR" },
-      `Đơn hàng #${toShortOrderId(orderId)} đã thanh toán bằng mã QR (mô phỏng). Cửa hàng đang chuẩn bị món ăn!`);
+      `Đơn hàng #${toShortOrderId(orderId)} đã thanh toán bằng mã QR (mô phỏng). Đơn đang chờ cửa hàng xác nhận.`);
     return { paid: true };
   },
 
@@ -172,7 +172,7 @@ export const paymentService = {
     const { order } = await loadPayableOrder(orderId, userId);
     pendingCards.delete(String(paymentId));
     await markPaid(orderId, order, { paymentChannel: "SIMULATOR_CARD", cardBrand: p.brand, cardLast4: p.last4 },
-      `Đơn hàng #${toShortOrderId(orderId)} đã thanh toán bằng thẻ ${p.brand} •••• ${p.last4} (mô phỏng). Cửa hàng đang chuẩn bị món ăn!`);
+      `Đơn hàng #${toShortOrderId(orderId)} đã thanh toán bằng thẻ ${p.brand} •••• ${p.last4} (mô phỏng). Đơn đang chờ cửa hàng xác nhận.`);
     return { paid: true, brand: p.brand, last4: p.last4 };
   },
 };
