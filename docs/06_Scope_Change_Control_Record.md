@@ -97,3 +97,25 @@ Ban CCB quyết định bổ sung giải pháp kỹ thuật chịu lỗi đa t�
 | **Trần Phan Minh Tiến** | Technical Lead (người đề xuất) | [ ] | [ký thật] |
 | **Nguyễn Gia Bảo** | Backend & AI | [ ] | [ký thật] |
 | **Nguyễn Bảo Quang Minh** | Frontend | [ ] | [ký thật] |
+
+### 6. Điều chỉnh phương án ngày 22/11/2026 (sau khi thử thực tế trên điện thoại)
+**Vấn đề phát hiện khi thử:** thanh toán MoMo bắt người dùng rời ứng dụng sang trang web, và cả hai đường đều không dùng được:
+- **Thẻ Visa/Master:** trang thanh toán thẻ của MoMo sandbox tải Bootstrap từ `stackpath.bootstrapcdn.com` (CDN đã ngừng hoạt động) nên trình duyệt bị treo, không hiện form nhập thẻ.
+- **Ví/QR:** trang chuyển sang mở ứng dụng MoMo thật trên điện thoại; ứng dụng này không nhận đơn của môi trường sandbox nên không có gì xảy ra. Thanh toán sandbox bằng ví cần ứng dụng MoMo bản test riêng.
+- API của MoMo cũng không cho ứng dụng nhận số thẻ trực tiếp (dữ liệu thẻ chỉ được nhập trên trang của MoMo).
+
+**Yêu cầu của nhóm:** người dùng thanh toán được ngay trong ứng dụng, không mở trang web.
+
+**Quyết định:** giữ tích hợp MoMo (mã QR thật của MoMo vẫn hiển thị trong ứng dụng) và bổ sung **cổng thanh toán MÔ PHỎNG** do backend tự phục vụ:
+- Form nhập thẻ Visa/Mastercard + bước OTP và tab mã QR nằm **trong ứng dụng** (`OnlinePaymentScreen`).
+- **Chỉ nhận một số thẻ test công khai** (`4111 1111 1111 1111`, `5555 5555 5555 4444`, thẻ lỗi `4000 0000 0000 0002`); mọi số thẻ khác, kể cả thẻ thật, bị chặn ngay trên thiết bị và ở máy chủ. Máy chủ chỉ lưu hãng thẻ và 4 số cuối.
+- Giao diện ghi rõ **"Cổng thử nghiệm (mô phỏng), không trừ tiền thật"**. Tài liệu và buổi bảo vệ phải trình bày đúng đây là **mô phỏng**, không phải tích hợp cổng thanh toán thật.
+- Chỉ hoạt động khi đặt `PAYMENT_SIMULATOR=1` (mặc định tắt). Đơn chỉ chuyển `PENDING` → `ACCEPTED` sau khi thanh toán thành công, như các phương thức khác.
+
+**Kết quả kiểm thử:**
+- Backend: 41/41 test tự động (kiểm tra thẻ, Luhn, hạn thẻ, từ chối thẻ thật, yêu cầu đăng nhập).
+- Luồng API thật (17 tình huống): thẻ lạ bị chặn, thẻ lỗi bị từ chối, thẻ hết hạn, OTP sai (3 lần thì huỷ phiên), thanh toán lặp bị chặn, người dùng khác không thanh toán được đơn của người khác, QR trong app, đơn COD không bị ảnh hưởng.
+- Ứng dụng: 7 widget test (bố cục khổ 360×640 không tràn, định dạng/kiểm tra form, chặn thẻ thật).
+- Thử trên điện thoại thật với APK build 5: [CẦN BỔ SUNG].
+
+**Tác động:** tiến độ thêm khoảng 0,5 ngày; chi phí 0 VNĐ. Rủi ro còn lại: cổng mô phỏng không chứng minh được tích hợp với cổng thanh toán thật; muốn dùng thật cần một cổng có tài khoản merchant (VNPay, PayOS...) và thay phần xử lý thẻ bằng trang/SDK của cổng đó.

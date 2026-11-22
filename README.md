@@ -77,6 +77,7 @@ python evaluate.py --data-dir <dataset>         # đo Top-1/Top-3/latency → mo
   systemctl --user stop gugugaga-demo        # tắt (dữ liệu được lưu trước khi tắt)
   ```
 - **URL tunnel đổi mỗi lần bật lại.** Trong app: lần đầu mở sẽ hỏi "Địa chỉ server"; muốn đổi sau đó thì **nhấn giữ chữ "GuGuGaGa"** ở màn hình đăng nhập.
+- **Thanh toán thử nghiệm trong app:** chọn "Thanh toán online" khi đặt hàng. Cổng này là **mô phỏng** (không trừ tiền thật), bật bằng `PAYMENT_SIMULATOR=1` trong `Backend/.env`. Thẻ test: `4111 1111 1111 1111`, hạn `12/30`, CVV `123`, OTP `123456`; thẻ bị từ chối: `4000 0000 0000 0002`. Mọi số thẻ khác bị chặn. Xem CR-02 trong `docs/06`.
 - **Tài khoản mẫu** (mật khẩu `123456`): khách `0912345671`, tài xế `0911111111`, admin `0900000000`.
 - **Đăng nhập Google (Android)** dùng project Firebase `guga-27d3f`. APK phải được ký bằng khoá có SHA-1 đã thêm vào Firebase (Project settings → app `com.example.GuGuGaGa` → Add fingerprint); build trên máy khác cần thêm SHA-1 của máy đó.
 
