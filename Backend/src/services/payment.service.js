@@ -5,6 +5,7 @@ import {
   momoConfig, createSignature, verifyResult, encodeExtraData, decodeExtraData, momoRequestType,
 } from "../utils/momo.js";
 import { checkCard, simulatorEnabled, SIM_OTP, MAX_OTP_ATTEMPTS } from "../utils/cardsim.js";
+import { checkPaymentChange } from "../utils/paymentchange.js";
 import crypto from "crypto";
 
 const ordersRef = db.collection("orders");
@@ -108,6 +109,16 @@ export const paymentService = {
       `Đơn hàng #${toShortOrderId(orderId)} đã được thanh toán qua MoMo. Đơn đang chờ cửa hàng xác nhận.`
     );
     return { ok: true, paid: true, orderId };
+  },
+
+  /** Đổi phương thức thanh toán cho đơn đang chờ xác nhận và chưa trả tiền. */
+  async changePaymentMethod(orderId, userId, method) {
+    const ref = ordersRef.doc(orderId);
+    const doc = await ref.get();
+    const c = checkPaymentChange(doc.exists ? doc.data() : null, userId, method);
+    if (!c.ok) throw httpError(c.status, c.error);
+    await ref.update({ paymentMethod: c.method, updatedAt: new Date() });
+    return { id: orderId, paymentMethod: c.method };
   },
 
   /** Có bật cổng mô phỏng không (app dùng để hiện nút mô phỏng). */

@@ -333,6 +333,21 @@ class ApiService {
     throw Exception(data['message'] ?? 'Thanh toán thất bại (${response.statusCode})');
   }
 
+  /// Đổi phương thức thanh toán của đơn đang chờ xác nhận và chưa trả tiền: 'COD' | 'BANKING' | 'MOMO'.
+  Future<void> changePaymentMethod(String orderId, String method, String token) async {
+    final response = await http.patch(
+      Uri.parse('${AppConstants.baseUrl}/user/orders/$orderId/payment-method'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'method': method}),
+    );
+    final data = json.decode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) return;
+    throw Exception(data['message'] ?? 'Không đổi được phương thức (${response.statusCode})');
+  }
+
   /// Mã QR hiển thị ngay trong app. source: "momo" (mã thật của MoMo) hoặc "simulator".
   Future<Map<String, dynamic>> createPaymentQr(String orderId, String token) =>
       _postPayment('/user/orders/$orderId/pay/qr', {}, token);
