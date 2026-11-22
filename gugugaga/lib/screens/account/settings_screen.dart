@@ -3,7 +3,7 @@ import '../../constants.dart';
 import '../../services/server_config.dart';
 
 /// Phiên bản hiển thị trong màn Cài đặt (đồng bộ với `version` trong pubspec.yaml).
-const String kAppVersionLabel = '1.1.0 (7)';
+const String kAppVersionLabel = '1.1.0 (8)';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
