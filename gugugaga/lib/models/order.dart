@@ -36,6 +36,7 @@ class Order {
   final Branch? branch;
   final Driver? driver;
   final bool isReviewed;
+  final bool isPaid;
 
   Order({
     required this.id,
@@ -54,7 +55,12 @@ class Order {
     this.branch,
     this.driver,
     this.isReviewed = false,
+    this.isPaid = false,
   });
+
+  /// Đơn thanh toán online/chuyển khoản, đang chờ xác nhận và chưa trả tiền: còn có thể thanh toán tiếp hoặc đổi phương thức.
+  bool get needsPayment =>
+      status == OrderStatus.pending && !isPaid && paymentMethod != PaymentMethod.cash;
 
   String get statusText {
     switch (status) {
@@ -145,6 +151,7 @@ class Order {
       branch: json['branch'] != null ? Branch.fromJson(json['branch']) : null,
       driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null,
       isReviewed: json['isReviewed'] ?? false,
+      isPaid: json['paymentStatus'] == 'PAID',
     );
   }
 

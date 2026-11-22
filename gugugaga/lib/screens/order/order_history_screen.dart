@@ -9,6 +9,8 @@ import '../../models/order.dart';
 import 'tracking_screen.dart';
 import '../review/review_screen.dart';
 import '../cart/cart_screen.dart';
+import '../checkout/online_payment_screen.dart';
+import '../checkout/bank_transfer_screen.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -424,6 +426,52 @@ class _OrderCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (order.needsPayment) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(10)),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: Colors.amber.shade900),
+                    const SizedBox(width: 8),
+                    const Expanded(child: Text('Đơn chưa thanh toán. Hoàn tất thanh toán hoặc đổi phương thức để cửa hàng xác nhận.', style: TextStyle(fontSize: 13))),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ElevatedButton.icon(
+                        onPressed: () => _openPayment(context, order),
+                        icon: const Icon(Icons.payment, size: 18),
+                        label: const Text('Thanh toán ngay'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _changeMethod(context, order),
+                      icon: const Icon(Icons.swap_horiz, size: 18),
+                      label: const Text('Đổi phương thức'),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.red.shade700),
+                        foregroundColor: Colors.red.shade700,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (order.status == OrderStatus.completed || order.status == OrderStatus.cancelled) ...[
               const SizedBox(height: 16),
               Row(
@@ -500,6 +548,62 @@ class _OrderCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Mở lại màn thanh toán đúng với phương thức đã chọn, xong thì tải lại danh sách đơn.
+  Future<void> _openPayment(BuildContext context, Order order) async {
+    final state = context.findAncestorStateOfType<_OrderHistoryScreenState>();
+    final Widget screen = order.paymentMethod == PaymentMethod.banking
+        ? BankTransferScreen(orderId: order.id, amount: order.totalAmount)
+        : OnlinePaymentScreen(orderId: order.id, amount: order.totalAmount);
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    state?._loadOrders();
+  }
+
+  /// Chọn phương thức khác cho đơn chưa trả tiền (không phải đặt lại từ đầu).
+  Future<void> _changeMethod(BuildContext context, Order order) async {
+    final state = context.findAncestorStateOfType<_OrderHistoryScreenState>();
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token == null) return;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Chọn phương thức thanh toán', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            ListTile(leading: const Icon(Icons.payments_outlined), title: const Text('Tiền mặt khi nhận hàng (COD)'), onTap: () => Navigator.pop(ctx, 'COD')),
+            ListTile(leading: const Icon(Icons.credit_card), title: const Text('Thẻ Visa/Master hoặc quét QR'), onTap: () => Navigator.pop(ctx, 'MOMO')),
+            ListTile(leading: const Icon(Icons.account_balance), title: const Text('Chuyển khoản ngân hàng (VietQR)'), onTap: () => Navigator.pop(ctx, 'BANKING')),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    try {
+      await ApiService().changePaymentMethod(order.id, choice, token);
+      if (!context.mounted) return;
+      if (choice == 'COD') {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Đã đổi sang tiền mặt. Đơn đang chờ cửa hàng xác nhận.'),
+          backgroundColor: Colors.green,
+        ));
+        state?._loadOrders();
+        return;
+      }
+      final Widget screen = choice == 'BANKING'
+          ? BankTransferScreen(orderId: order.id, amount: order.totalAmount)
+          : OnlinePaymentScreen(orderId: order.id, amount: order.totalAmount);
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+      state?._loadOrders();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'.replaceFirst('Exception: ', '')), backgroundColor: Colors.red));
+      }
+    }
   }
 
   void _handleReorder(BuildContext context, Order order) async {

@@ -13,6 +13,16 @@ const page = (title, msg, ok) => `<!doctype html><html lang="vi"><head><meta cha
 <p><b>Hãy quay lại ứng dụng GuGuGaGa</b> — đơn hàng sẽ tự cập nhật.</p></div></body></html>`;
 
 export const paymentController = {
+  /** PATCH /api/user/orders/:id/payment-method  { method: "COD" | "BANKING" | "MOMO" } */
+  async changeMethod(req, res) {
+    try {
+      const result = await paymentService.changePaymentMethod(req.params.id, req.user.id, req.body?.method);
+      return ApiResponse.success(res, result, "Đã đổi phương thức thanh toán");
+    } catch (error) {
+      return res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+  },
+
   /** POST /api/user/orders/:id/momo  { method: "wallet" | "card" } */
   async createMomo(req, res) {
     try {
