@@ -7,8 +7,9 @@ export default function useOrders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
+  // silent = làm mới ngầm (tự động): không bật spinner và không báo lỗi liên tục
+  const fetchOrders = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const data = await orderService.getAll();
       if (data.data && Array.isArray(data.data)) {
@@ -36,7 +37,7 @@ export default function useOrders() {
       return true;
     } catch (err) {
       console.error("Failed to update order status:", err);
-      toast.error("Cập nhật trạng thái thất bại");
+      toast.error(err?.response?.data?.message || "Cập nhật trạng thái thất bại");
       return false;
     }
   };
