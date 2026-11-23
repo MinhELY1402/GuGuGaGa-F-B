@@ -16,7 +16,7 @@ export const shipperController = {
 
   getAvailableOrders: async (req, res) => {
     try {
-      const orders = await shipperService.getAvailableOrders();
+      const orders = await shipperService.getAvailableOrders(req.user.id);
       return ApiResponse.success(res, orders, "Lấy danh sách đơn có thể nhận thành công");
     } catch (error) {
       console.error("[getAvailableOrders] ERROR:", error.message, error.stack);
@@ -76,7 +76,7 @@ export const shipperController = {
       const updatedOrder = await shipperService.updateOrderStatus(id, driverId, status);
       return ApiResponse.success(res, updatedOrder, "Cập nhật trạng thái thành công");
     } catch (error) {
-      return ApiResponse.error(res, error);
+      return ApiResponse.error(res, error, error.status || 400);
     }
   },
 

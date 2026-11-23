@@ -6,6 +6,31 @@ import Pagination from "../components/Pagination";
 import useOrders from "../hooks/useOrders";
 import { driverService } from "../services/driverService";
 
+// Nhãn thanh toán: đơn online phải "Đã thanh toán" mới xác nhận được; COD thu tiền khi giao
+function PaymentBadge({ order }) {
+  const paid = order.paymentStatus === "PAID";
+  const cod = order.paymentMethod === "COD";
+  const [text, cls] = paid
+    ? ["Đã thanh toán", "bg-green-100 text-green-800"]
+    : cod
+    ? ["Thu khi giao", "bg-gray-100 text-gray-700"]
+    : ["Chưa thanh toán", "bg-red-100 text-red-700"];
+  return (
+    <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full ${cls}`}>
+      {text}
+    </span>
+  );
+}
+
+// Các trạng thái được chuyển tới từ trạng thái hiện tại (khớp Backend/src/utils/orderflow.js)
+const NEXT_STATUSES = {
+  PENDING: ["ACCEPTED", "CANCELLED"],
+  ACCEPTED: ["CANCELLED"], // "Đang giao" chỉ qua nút giao tài xế
+  DRIVER_ASSIGNED: ["DELIVERED", "CANCELLED"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
 export default function Orders() {
   const { orders, loading, updateOrderStatus, assignDriver } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,7 +101,9 @@ export default function Orders() {
       case "COD":
         return "Thanh toán khi nhận hàng";
       case "MOMO":
-        return "Ví MoMo";
+        return "Thẻ / QR (online)";
+      case "BANKING":
+        return "Chuyển khoản";
       default:
         return method;
     }
@@ -299,6 +326,7 @@ export default function Orders() {
                       <div className="text-sm text-gray-900">
                         {getPaymentMethodText(order.paymentMethod)}
                       </div>
+                      <PaymentBadge order={order} />
                     </td>
                     <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
@@ -414,6 +442,7 @@ export default function Orders() {
                     <p className="font-semibold text-gray-900">
                       {getPaymentMethodText(selectedOrder.paymentMethod)}
                     </p>
+                    <PaymentBadge order={selectedOrder} />
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm text-gray-500">Địa chỉ giao hàng</p>
@@ -497,11 +526,24 @@ export default function Orders() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     defaultValue={selectedOrder.status}
                   >
-                    <option value="PENDING">Chờ xử lý</option>
-                    <option value="ACCEPTED">Đã chấp nhận</option>
-                    <option value="DRIVER_ASSIGNED">Đã gán tài xế</option>
-                    <option value="DELIVERED">Đã giao hàng</option>
-                    <option value="CANCELLED">Đã hủy</option>
+                    {/* Chỉ cho chọn trạng thái hiện tại và các bước tiếp theo hợp lệ (khớp với backend) */}
+                    {[
+                      ["PENDING", "Chờ xử lý"],
+                      ["ACCEPTED", "Đã chấp nhận"],
+                      ["DRIVER_ASSIGNED", "Đã gán tài xế"],
+                      ["DELIVERED", "Đã giao hàng"],
+                      ["CANCELLED", "Đã hủy"],
+                    ]
+                      .filter(
+                        ([value]) =>
+                          value === selectedOrder.status ||
+                          (NEXT_STATUSES[selectedOrder.status] || []).includes(value)
+                      )
+                      .map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="flex gap-3 pt-4">

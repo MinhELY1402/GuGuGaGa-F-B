@@ -1,4 +1,6 @@
 import { selectHideable } from "../utils/history.js";
+import { canDriverTakeOrder } from "../utils/dispatch.js";
+import { checkTransition } from "../utils/orderflow.js";
 import db from "../configs/firestore.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -76,15 +78,17 @@ export const shipperService = {
   },
 
   // Đơn hàng mới chưa có tài xế nhận (hiển thị cho tất cả tài xế)
-  getAvailableOrders: async () => {
+  getAvailableOrders: async (driverId) => {
+    const driverDoc = driverId ? await driversRef.doc(driverId).get() : null;
+    const driver = driverDoc?.exists ? { id: driverDoc.id, ...driverDoc.data() } : null;
     // Dùng single-field query để tránh lỗi composite index
     const snap = await ordersRef.where("status", "==", "ACCEPTED").get();
 
     const orders = [];
     for (const doc of snap.docs) {
       const data = doc.data();
-      // Chỉ lấy đơn chưa có tài xế
-      if (!data.driverId) {
+      // Chỉ lấy đơn chưa có tài xế, và (nếu tài xế thuộc chi nhánh) đúng chi nhánh
+      if (!data.driverId && (!driver || canDriverTakeOrder(data, driver).ok)) {
         const order = { id: doc.id, ...data };
         await populateOrder(order);
         orders.push(order);
@@ -99,31 +103,21 @@ export const shipperService = {
     return orders;
   },
 
-  // Tài xế nhận đơn
+  // Tài xế nhận đơn: dùng giao dịch để hai người bấm cùng lúc thì chỉ một người nhận được
   acceptOrder: async (orderId, driverId) => {
     const orderRef = ordersRef.doc(orderId);
-    const orderDoc = await orderRef.get();
+    const driverRef = driversRef.doc(driverId);
 
-    if (!orderDoc.exists) {
-      throw new Error("Đơn hàng không tồn tại");
-    }
-
-    const orderData = orderDoc.data();
-
-    if (orderData.driverId) {
-      throw new Error("Đơn hàng đã có tài xế nhận");
-    }
-
-    if (orderData.status !== "ACCEPTED") {
-      throw new Error("Đơn hàng chưa sẵn sàng để nhận");
-    }
-
-    await driversRef.doc(driverId).update({ status: "ON_DELIVERY" });
-
-    await orderRef.update({
-      driverId,
-      status: "DRIVER_ASSIGNED",
-      updatedAt: new Date(),
+    const orderData = await db.runTransaction(async (tx) => {
+      const [orderDoc, driverDoc] = await Promise.all([tx.get(orderRef), tx.get(driverRef)]);
+      const check = canDriverTakeOrder(
+        orderDoc.exists ? orderDoc.data() : null,
+        driverDoc.exists ? { id: driverDoc.id, ...driverDoc.data() } : null
+      );
+      if (!check.ok) throw new Error(check.error);
+      tx.update(driverRef, { status: "ON_DELIVERY" });
+      tx.update(orderRef, { driverId, status: "DRIVER_ASSIGNED", updatedAt: new Date() });
+      return orderDoc.data();
     });
 
     // Tạo thông báo cho user
@@ -205,9 +199,8 @@ export const shipperService = {
     }
 
     const orderData = orderDoc.data();
-    if (orderData.driverId !== driverId) {
-      throw new Error("Đơn hàng không thuộc về bạn");
-    }
+    const check = checkTransition(orderData, status, { role: "DRIVER", id: driverId });
+    if (!check.ok) throw Object.assign(new Error(check.error), { status: check.status });
 
     await ordersRef.doc(orderId).update({ status, updatedAt: new Date() });
 
@@ -236,7 +229,7 @@ export const shipperService = {
       console.error("[shipper updateOrderStatus Notification Error]", err);
     }
 
-    if (status === "DELIVERED") {
+    if (status === "DELIVERED" || status === "CANCELLED") {
       await driversRef.doc(driverId).update({ status: "AVAILABLE" });
     }
 

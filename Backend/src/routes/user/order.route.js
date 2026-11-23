@@ -18,6 +18,7 @@ routerOrder.get("/", orderController.getOrders);
 routerOrder.get("/:id/check-payment", orderController.checkPayment);
 
 // Tạo phiên thanh toán MoMo (ví/QR hoặc thẻ Visa) cho đơn MOMO
+routerOrder.post("/:id/cancel", orderController.cancelMyOrder);
 routerOrder.patch("/:id/payment-method", paymentController.changeMethod);
 routerOrder.post("/:id/momo", paymentController.createMomo);
 

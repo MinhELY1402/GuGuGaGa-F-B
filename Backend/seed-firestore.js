@@ -198,6 +198,18 @@ async function main() {
     updatedAt: now,
   });
 
+  // Thêm vài tài xế nữa để mỗi người thử dùng một tài khoản (mật khẩu 123456)
+  for (const d of [
+    { name: "Tai xe Lan", phone: "0911111112" },
+    { name: "Tai xe Hung", phone: "0911111113" },
+    { name: "Tai xe Mai", phone: "0911111114" },
+  ]) {
+    await db.collection("drivers").add({
+      branchId: branchRef.id, name: d.name, phone: d.phone, passwordHash,
+      status: "AVAILABLE", latitude: null, longitude: null, createdAt: now, updatedAt: now,
+    });
+  }
+
   // Create cart
   const cartRef = await db.collection("carts").add({
     userId: customerRef.id,

@@ -1,6 +1,9 @@
 import db from "../configs/firestore.js";
 import { notificationService } from "./notification.service.js";
 import axios from "axios";
+import { checkTransition, checkAssign, checkPayable } from "../utils/orderflow.js";
+import { checkPaymentAccess, checkManualConfirm, shouldExpire, payTimeoutMinutes } from "../utils/paymentguard.js";
+import { simulatorEnabled } from "../utils/cardsim.js";
 import { extractShortOrderId, toShortOrderId, shouldMarkPaid, initialOrderStatus, paidUpdate } from "../utils/casso.js";
 
 const ordersRef = db.collection("orders");
@@ -180,28 +183,65 @@ export const orderService = {
     return order;
   },
 
-  // Cập nhật trạng thái đơn hàng
-  async updateStatus(orderId, status) {
-    const validStatuses = [
-      "PENDING",
-      "ACCEPTED",
-      "DRIVER_ASSIGNED",
-      "DELIVERED",
-      "CANCELLED",
-    ];
-    if (!validStatuses.includes(status)) {
-      throw new Error(
-        `Status không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`
+  /** Hết hạn thanh toán: tự hủy đơn online chưa trả (đọc lại trong giao dịch để không hủy nhầm đơn vừa được trả). */
+  async expireUnpaidOrder(orderId) {
+    const orderRef = ordersRef.doc(orderId);
+    const expired = await db.runTransaction(async (tx) => {
+      const doc = await tx.get(orderRef);
+      const order = doc.exists ? doc.data() : null;
+      if (!shouldExpire(order, new Date(), payTimeoutMinutes())) return null;
+      tx.update(orderRef, { status: "CANCELLED", cancelledBy: "SYSTEM", cancelReason: "PAYMENT_TIMEOUT", updatedAt: new Date() });
+      return order;
+    });
+    if (!expired) return false;
+    try {
+      await notificationService.createNotification(
+        expired.userId,
+        "Đơn hàng đã hết hạn thanh toán",
+        `Đơn hàng #${orderId.substring(orderId.length - 6)} đã bị hủy vì chưa thanh toán sau ${payTimeoutMinutes()} phút. Bạn có thể đặt lại.`,
+        orderId
       );
+    } catch (err) {
+      console.error("[expireUnpaidOrder Notification Error]", err);
     }
+    return true;
+  },
 
+  // Khách tự hủy đơn của mình khi còn "Chờ xác nhận"
+  async cancelOrder(orderId, userId) {
+    const orderRef = ordersRef.doc(orderId);
+    const doc = await orderRef.get();
+    const order = doc.exists ? doc.data() : null;
+    const check = checkTransition(order, "CANCELLED", { role: "CUSTOMER", id: userId });
+    if (!check.ok) throw Object.assign(new Error(check.error), { status: check.status });
+    await orderRef.update({ status: "CANCELLED", cancelledBy: "CUSTOMER", updatedAt: new Date() });
+    try {
+      const short = orderId.substring(orderId.length - 6);
+      const paid = order.paymentStatus === "PAID";
+      await notificationService.createNotification(
+        userId,
+        "Đơn hàng đã bị hủy",
+        paid
+          ? `Bạn đã hủy đơn hàng #${short}. Đơn đã thanh toán, cửa hàng sẽ liên hệ để hoàn tiền.`
+          : `Bạn đã hủy đơn hàng #${short}.`,
+        orderId
+      );
+    } catch (err) {
+      console.error("[cancelOrder Notification Error]", err);
+    }
+    return { id: orderId, status: "CANCELLED", refundNeeded: order.paymentStatus === "PAID" };
+  },
+
+  // Cập nhật trạng thái đơn hàng (admin) theo bảng chuyển trạng thái trong utils/orderflow.js
+  async updateStatus(orderId, status) {
     const orderRef = ordersRef.doc(orderId);
     const orderDoc = await orderRef.get();
-    if (!orderDoc.exists) throw new Error("Order not found");
-    const currentOrder = orderDoc.data();
+    const currentOrder = orderDoc.exists ? orderDoc.data() : null;
+    const check = checkTransition(currentOrder, status, { role: "ADMIN" });
+    if (!check.ok) throw Object.assign(new Error(check.error), { status: check.status });
 
-    // Nếu đơn hàng hoàn thành -> set driver về AVAILABLE
-    if (status === "DELIVERED" && currentOrder.driverId) {
+    // Đơn kết thúc (giao xong / hủy) -> tài xế rảnh trở lại
+    if ((status === "DELIVERED" || status === "CANCELLED") && currentOrder.driverId) {
       await driversRef.doc(currentOrder.driverId).update({ status: "AVAILABLE" });
     }
 
@@ -250,6 +290,9 @@ export const orderService = {
     if (!driverDoc.exists) {
       throw new Error("Driver không tồn tại");
     }
+    const target = await ordersRef.doc(orderId).get();
+    const assign = checkAssign(target.exists ? target.data() : null);
+    if (!assign.ok) throw Object.assign(new Error(assign.error), { status: assign.status });
 
     // Cập nhật trạng thái driver -> ON_DELIVERY
     await driversRef.doc(driverId).update({ status: "ON_DELIVERY" });
@@ -285,18 +328,29 @@ export const orderService = {
     return order;
   },
 
-  async checkPayment(orderId, force = false) {
+  async checkPayment(orderId, userId, force = false) {
     const orderRef = ordersRef.doc(orderId);
     const orderDoc = await orderRef.get();
-    if (!orderDoc.exists) {
-      throw new Error("Đơn hàng không tồn tại");
-    }
+    const orderData = orderDoc.exists ? orderDoc.data() : null;
 
-    const orderData = orderDoc.data();
-    
+    // Chỉ chủ đơn mới được kiểm tra thanh toán
+    const access = checkPaymentAccess(orderData, userId);
+    if (!access.ok) throw Object.assign(new Error(access.error), { status: access.status });
+
     // Nếu đơn hàng đã được thanh toán
     if (orderData.paymentStatus === "PAID") {
       return { paid: true };
+    }
+
+    // Đơn đã hủy / không còn chờ xác nhận thì không đánh dấu đã thanh toán qua đường này
+    if (!checkPayable(orderData).ok) {
+      return { paid: false, status: orderData.status };
+    }
+
+    // "Tôi đã chuyển khoản" (force) không đối soát tiền thật: chỉ cho phép ở chế độ demo
+    if (force) {
+      const manual = checkManualConfirm(orderData, simulatorEnabled());
+      if (!manual.ok) throw Object.assign(new Error(manual.error), { status: manual.status });
     }
 
     const cassoApiKey = process.env.CASSO_API_KEY;

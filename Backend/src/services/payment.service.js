@@ -6,6 +6,7 @@ import {
 } from "../utils/momo.js";
 import { checkCard, simulatorEnabled, SIM_OTP, MAX_OTP_ATTEMPTS } from "../utils/cardsim.js";
 import { checkPaymentChange } from "../utils/paymentchange.js";
+import { checkPayable } from "../utils/orderflow.js";
 import crypto from "crypto";
 
 const ordersRef = db.collection("orders");
@@ -18,7 +19,8 @@ async function loadPayableOrder(orderId, userId) {
   if (!doc.exists) throw httpError(404, "Đơn hàng không tồn tại");
   const order = doc.data();
   if (order.userId !== userId) throw httpError(403, "Không có quyền với đơn hàng này");
-  if (order.paymentStatus === "PAID") throw httpError(409, "Đơn hàng đã được thanh toán");
+  const payable = checkPayable(order); // đơn đã hủy / đã trả / không còn chờ xác nhận thì không thanh toán được
+  if (!payable.ok) throw httpError(payable.status, payable.error);
   if (String(order.paymentMethod).toUpperCase() !== "MOMO") throw httpError(400, "Đơn hàng không chọn thanh toán online");
   return { ref: doc.ref, order };
 }

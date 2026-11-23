@@ -17,6 +17,7 @@ Map<String, dynamic> _json({String status = 'PENDING', String method = 'MOMO', S
     };
 
 void main() {
+  orderCancelTests();
   test('đơn online chờ xác nhận, chưa trả tiền: cần thanh toán', () {
     expect(Order.fromJson(_json()).needsPayment, isTrue);
     expect(Order.fromJson(_json(method: 'BANKING')).needsPayment, isTrue);
@@ -25,5 +26,14 @@ void main() {
     expect(Order.fromJson(_json(paid: 'PAID')).needsPayment, isFalse);
     expect(Order.fromJson(_json(method: 'COD')).needsPayment, isFalse);
     expect(Order.fromJson(_json(status: 'ACCEPTED')).needsPayment, isFalse);
+  });
+}
+
+void orderCancelTests() {
+  test('chỉ hủy được đơn đang chờ xác nhận', () {
+    expect(Order.fromJson(_json()).canCancel, isTrue);
+    expect(Order.fromJson(_json(method: 'COD')).canCancel, isTrue);
+    expect(Order.fromJson(_json(status: 'ACCEPTED')).canCancel, isFalse);
+    expect(Order.fromJson(_json(status: 'DELIVERED')).canCancel, isFalse);
   });
 }
