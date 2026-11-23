@@ -36,6 +36,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _loadDriverInfo();
     _loadHidden();
     _fetchAll();
+    // Tự làm mới danh sách mỗi 10 giây để thấy đơn mới / đơn bị người khác nhận
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted && !_fetching && !_accepting) _fetchAll(silent: true);
+    });
   }
 
   Future<void> _loadHidden() async {
@@ -71,7 +75,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
+  bool _fetching = false;
+
   Future<void> _fetchAll({bool silent = false}) async {
+    if (_fetching) return;
+    _fetching = true;
     if (!silent) setState(() => _isLoading = true);
     try {
       final myOrders = await _apiService.getAssignedOrders();
@@ -93,14 +101,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           _averageRating = avg;
         });
       }
+    } on SessionExpiredException {
+      _onSessionExpired();
     } catch (e) {
       print('Error fetching orders: $e');
     } finally {
+      _fetching = false;
       if (!silent && mounted) setState(() => _isLoading = false);
     }
   }
 
+  bool _accepting = false; // chặn bấm liên tiếp nhiều lần
+
   Future<void> _acceptOrder(String orderId) async {
+    if (_accepting) return;
+    _accepting = true;
     try {
       await _apiService.acceptOrder(orderId);
       if (mounted) {
@@ -121,18 +136,41 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         _fetchAll();
         _tabController.animateTo(1); // Switch to "Đơn của tôi" tab
       }
+    } on SessionExpiredException {
+      _onSessionExpired();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: $e'),
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
+        // Đơn có thể đã được tài xế khác nhận: làm mới để bỏ đơn đó khỏi danh sách
+        _fetchAll(silent: true);
       }
+    } finally {
+      _accepting = false;
     }
+  }
+
+  bool _expiredHandled = false;
+
+  /// Token hết hạn: dừng tự làm mới, báo cho tài xế và đưa về màn đăng nhập.
+  void _onSessionExpired() {
+    if (_expiredHandled || !mounted) return;
+    _expiredHandled = true;
+    _timer?.cancel();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại')),
+    );
   }
 
   Future<void> _logout() async {
@@ -205,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildStatsBar() {
     final delivering = _myOrders.where((o) => o['status'] == 'DRIVER_ASSIGNED').length;
     final delivered = _myOrders.where((o) => o['status'] == 'DELIVERED').length;
-    final total = _myOrders.fold<int>(0, (sum, o) => sum + ((o['totalAmount'] ?? 0) as int));
+    final total = _myOrders.fold<int>(0, (sum, o) => sum + ((o['totalAmount'] ?? 0) as num).toInt());
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),

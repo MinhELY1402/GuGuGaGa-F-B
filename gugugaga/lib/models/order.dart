@@ -58,6 +58,9 @@ class Order {
     this.isPaid = false,
   });
 
+  /// Khách chỉ hủy được đơn khi cửa hàng chưa xác nhận.
+  bool get canCancel => status == OrderStatus.pending;
+
   /// Đơn thanh toán online/chuyển khoản, đang chờ xác nhận và chưa trả tiền: còn có thể thanh toán tiếp hoặc đổi phương thức.
   bool get needsPayment =>
       status == OrderStatus.pending && !isPaid && paymentMethod != PaymentMethod.cash;

@@ -333,6 +333,12 @@ class ApiService {
     throw Exception(data['message'] ?? 'Thanh toán thất bại (${response.statusCode})');
   }
 
+  /// Khách hủy đơn của mình khi còn "Chờ xác nhận". Trả về true nếu đơn đã thanh toán (cần hoàn tiền).
+  Future<bool> cancelOrder(String orderId, String token) async {
+    final data = await _postPayment('/user/orders/$orderId/cancel', {}, token);
+    return data['refundNeeded'] == true;
+  }
+
   /// Đổi phương thức thanh toán của đơn đang chờ xác nhận và chưa trả tiền: 'COD' | 'BANKING' | 'MOMO'.
   Future<void> changePaymentMethod(String orderId, String method, String token) async {
     final response = await http.patch(

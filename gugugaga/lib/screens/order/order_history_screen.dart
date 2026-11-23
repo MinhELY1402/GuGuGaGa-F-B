@@ -426,6 +426,18 @@ class _OrderCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (order.canCancel) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => _cancelOrder(context, order),
+                  icon: const Icon(Icons.cancel_outlined, size: 18),
+                  label: const Text('Hủy đơn'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
+                ),
+              ),
+            ],
             if (order.needsPayment) ...[
               const SizedBox(height: 12),
               Container(
@@ -548,6 +560,44 @@ class _OrderCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Khách hủy đơn khi còn "Chờ xác nhận" (có hộp thoại xác nhận).
+  Future<void> _cancelOrder(BuildContext context, Order order) async {
+    final state = context.findAncestorStateOfType<_OrderHistoryScreenState>();
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    if (token == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hủy đơn hàng?'),
+        content: Text(order.isPaid
+            ? 'Đơn này đã thanh toán. Sau khi hủy, cửa hàng sẽ liên hệ để hoàn tiền.'
+            : 'Bạn có chắc muốn hủy đơn này không?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Không')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Hủy đơn', style: TextStyle(color: Colors.red.shade700)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    try {
+      await ApiService().cancelOrder(order.id, token);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã hủy đơn hàng')));
+      state?._loadOrders();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('$e'.replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ));
+        state?._loadOrders(); // trạng thái đơn có thể đã đổi (vd. cửa hàng vừa xác nhận)
+      }
+    }
   }
 
   /// Mở lại màn thanh toán đúng với phương thức đã chọn, xong thì tải lại danh sách đơn.
