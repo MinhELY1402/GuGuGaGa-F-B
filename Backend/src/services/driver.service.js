@@ -1,5 +1,6 @@
 import db from "../configs/firestore.js";
 import bcrypt from "bcrypt";
+import { validateDriverInput } from "../utils/driverinput.js";
 
 const driversRef = db.collection("drivers");
 const branchesRef = db.collection("branches");
@@ -13,6 +14,12 @@ async function populateBranch(driver) {
     driver.branch = null;
   }
   return driver;
+}
+
+/** Báo lỗi nếu số điện thoại đã thuộc về tài xế khác (exceptId: bỏ qua chính tài xế đang sửa). */
+async function assertPhoneFree(phone, exceptId) {
+  const snap = await driversRef.where("phone", "==", String(phone).trim()).get();
+  if (snap.docs.some((d) => d.id !== exceptId)) throw new Error("Số điện thoại này đã được dùng cho tài xế khác");
 }
 
 export const driverService = {
@@ -35,6 +42,12 @@ export const driverService = {
 
   // Tạo tài xế
   async create(data) {
+    const invalid = validateDriverInput(data, "create");
+    if (invalid) throw new Error(invalid);
+    await assertPhoneFree(data.phone);
+    const branch = await branchesRef.doc(String(data.branchId)).get();
+    if (!branch.exists) throw new Error("Chi nhánh không tồn tại");
+    data = { ...data, name: data.name.trim(), phone: String(data.phone).trim() };
     const hashed = await bcrypt.hash(data.password, 10);
     const now = new Date();
     const docRef = await driversRef.add({
@@ -53,6 +66,9 @@ export const driverService = {
 
   // Cập nhật tài xế
   async update(id, data) {
+    const invalid = validateDriverInput(data, "update");
+    if (invalid) throw new Error(invalid);
+    if (data.phone !== undefined) await assertPhoneFree(data.phone, id);
     const updateData = {
       updatedAt: new Date(),
     };
