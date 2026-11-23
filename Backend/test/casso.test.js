@@ -40,3 +40,16 @@ test("isValidCassoToken so khớp header Secure-Token", () => {
   // Chưa cấu hình token → không chặn (dev)
   assert.equal(isValidCassoToken({}, ""), true);
 });
+
+import { initialOrderStatus, paidUpdate } from "../src/utils/casso.js";
+
+test("initialOrderStatus: mọi đơn đều bắt đầu ở Chờ xác nhận (PENDING)", () => {
+  for (const m of ["BANKING", "banking", "MOMO", "COD", undefined]) assert.equal(initialOrderStatus(m), "PENDING");
+});
+
+test("paidUpdate: chỉ đánh dấu đã thanh toán, không đổi trạng thái đơn", () => {
+  const now = new Date(0);
+  for (const status of ["PENDING", "ACCEPTED", "DRIVER_ASSIGNED"]) {
+    assert.deepEqual(paidUpdate({ status }, now), { paymentStatus: "PAID", updatedAt: now });
+  }
+});

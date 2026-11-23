@@ -9,6 +9,7 @@ router.use("/auth", shipperAuthRoute);
 router.get("/orders/available", protectDriverRoute, shipperController.getAvailableOrders);
 router.post("/orders/:id/accept", protectDriverRoute, shipperController.acceptOrder);
 router.get("/orders", protectDriverRoute, shipperController.getMyOrders);
+router.post("/orders/history/hide", protectDriverRoute, shipperController.hideHistory);
 router.patch("/orders/:id/status", protectDriverRoute, shipperController.updateOrderStatus);
 router.post("/location", protectDriverRoute, shipperController.updateLocation);
 

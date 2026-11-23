@@ -7,6 +7,8 @@ import '../order/order_history_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
 import 'favorite_products_screen.dart';
+import 'settings_screen.dart';
+import 'help_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -237,14 +239,20 @@ class AccountScreen extends StatelessWidget {
             icon: Icons.settings,
             title: 'Cài đặt',
             onTap: () {
-              // Navigate to settings screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
             },
           ),
           _AccountMenuItem(
             icon: Icons.help_outline,
             title: 'Trợ giúp',
             onTap: () {
-              // Navigate to help screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HelpScreen()),
+              );
             },
           ),
           const Divider(),

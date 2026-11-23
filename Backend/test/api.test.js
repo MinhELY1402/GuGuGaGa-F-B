@@ -7,6 +7,9 @@ process.env.NODE_ENV = "test";
 process.env.JWT_SECRET = "test-secret";
 process.env.CASSO_SECURE_TOKEN = "casso-test-token";
 process.env.FIREBASE_SERVICE_ACCOUNT_PATH = "./__no_service_account__.json";
+process.env.MOMO_PARTNER_CODE = "MOMO";
+process.env.MOMO_ACCESS_KEY = "test-access";
+process.env.MOMO_SECRET_KEY = "test-secret";
 
 let app;
 before(async () => {
@@ -89,4 +92,27 @@ test("AI chat: chưa cấu hình GEMINI_API_KEY → 503 (không gọi ra ngoài)
 test("AI chat: prompt quá dài → 413", async () => {
   const res = await request(app).post("/api/ai/chat").send({ prompt: "a".repeat(30001) });
   assert.equal(res.status, 413);
+});
+
+test("MoMo: tạo thanh toán cần đăng nhập → 401", async () => {
+  const res = await request(app).post("/api/user/orders/abc/momo").send({ method: "card" });
+  assert.equal(res.status, 401);
+});
+
+test("MoMo IPN giả mạo (sai chữ ký) → 400, không đụng DB", async () => {
+  const res = await request(app).post("/api/payment/momo/ipn").send({ partnerCode: "MOMO", orderId: "x", amount: "1", resultCode: 0, signature: "deadbeef" });
+  assert.equal(res.status, 400);
+});
+
+test("MoMo return với chữ ký sai → trang 'chưa hoàn tất'", async () => {
+  const res = await request(app).get("/api/payment/momo/return").query({ partnerCode: "MOMO", resultCode: "0", signature: "bad" });
+  assert.equal(res.status, 200);
+  assert.match(res.text, /chưa hoàn tất/);
+});
+
+test("Thanh toán online trong app: mọi route mới cần đăng nhập → 401", async () => {
+  for (const path of ["/pay/qr", "/pay/qr/simulate", "/pay/card", "/pay/card/confirm"]) {
+    const res = await request(app).post(`/api/user/orders/abc${path}`).send({});
+    assert.equal(res.status, 401, path);
+  }
 });

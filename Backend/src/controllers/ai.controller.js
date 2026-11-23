@@ -57,64 +57,78 @@ export const aiController = {
     }
   },
 
+  /**
+   * POST /api/ai/recognize-food (multipart "image")
+   * 1) Nếu đặt AI_SERVICE_URL: gọi AI Service PyTorch (Flask /predict) của dự án.
+   * 2) Nếu không có hoặc lỗi: nhận diện bằng Gemini Vision, chỉ chọn trong các món của menu.
+   */
   async recognizeFood(req, res) {
     try {
-      if (!req.file) {
-        throw new Error("No image file uploaded");
+      if (!req.file) throw new Error("No image file uploaded");
+      const mime = detectImageMime(req.file.buffer, req.file.mimetype, req.file.originalname);
+
+      const [prodSnap, catSnap] = await Promise.all([productsRef.get(), db.collection("categories").get()]);
+      const allProducts = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const allCategories = catSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const norm = (x) => String(x || "").toLowerCase().normalize("NFC").replace(/\s+/g, "");
+
+      // ---- 1. AI Service riêng (chỉ khi được cấu hình) ----
+      const aiUrl = process.env.AI_SERVICE_URL;
+      if (aiUrl) {
+        try {
+          const form = new FormData();
+          form.append("image", req.file.buffer, { filename: req.file.originalname || "image.jpg", contentType: mime });
+          const r = await axios.post(`${aiUrl.replace(/\/$/, "")}/predict`, form, { headers: form.getHeaders(), timeout: 15000 });
+          if (r.data?.success && r.data.class_name) {
+            const name = r.data.class_name;
+            const cat = allCategories.find((c) => norm(c.name) === norm(name));
+            const matchedProducts = cat
+              ? allProducts.filter((p) => p.categoryId === cat.id)
+              : allProducts.filter((p) => norm(p.name).includes(norm(name)));
+            return ApiResponse.success(res, {
+              detectedFoodName: `${name} (Độ tin cậy: ${(r.data.confidence * 100).toFixed(0)}%)`,
+              matchedProducts,
+              engine: "local-ai",
+            }, "Food recognized successfully by local AI");
+          }
+        } catch (e) {
+          console.warn("[recognizeFood] AI_SERVICE_URL lỗi, chuyển sang Gemini:", e.message);
+        }
       }
 
-      // 1. Package the image buffer and send it to the local Python AI service
-      const form = new FormData();
-      form.append("image", req.file.buffer, {
-        filename: req.file.originalname || "image.jpg",
-        contentType: detectImageMime(req.file.buffer, req.file.mimetype, req.file.originalname),
+      // ---- 2. Gemini Vision ----
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) throw new Error("Chưa cấu hình AI nhận diện (AI_SERVICE_URL hoặc GEMINI_API_KEY)");
+      const menu = allProducts.map((p) => p.name);
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: process.env.GEMINI_VISION_MODEL || "gemini-2.5-flash",
+        generationConfig: { responseMimeType: "application/json", temperature: 0 },
       });
-
-      const pythonResponse = await axios.post("http://localhost:8000/predict", form, {
-        headers: {
-          ...form.getHeaders(),
-        },
-      });
-
-      if (!pythonResponse.data || !pythonResponse.data.success) {
-        throw new Error(pythonResponse.data.message || "Failed to get prediction from local AI");
+      const prompt = `Bạn là chuyên gia ẩm thực Việt Nam. Nhìn ảnh và cho biết món ăn trong ảnh.
+Chọn tối đa 3 món PHÙ HỢP NHẤT trong thực đơn sau (ghi đúng tên như danh sách), sắp xếp theo độ tin cậy giảm dần:
+${menu.map((n) => "- " + n).join("\n")}
+Nếu ảnh không phải món ăn hoặc không khớp món nào, trả về danh sách rỗng.
+Trả về JSON: {"dish": "<tên món nhìn thấy, tiếng Việt>", "matches": [{"name": "<tên trong thực đơn>", "confidence": 0-1}]}`;
+      const result = await model.generateContent([prompt, { inlineData: { data: req.file.buffer.toString("base64"), mimeType: mime } }]);
+      let parsed;
+      try {
+        parsed = JSON.parse(result.response.text());
+      } catch {
+        throw new Error("AI trả về kết quả không đọc được, vui lòng thử ảnh khác");
       }
-
-      const detectedCategory = pythonResponse.data.class_name; // e.g. "Gà Rán", "Burger", "Đồ Uống", "Món Phụ"
-      const confidence = pythonResponse.data.confidence;
-
-      // 2. Fetch all products from Firestore
-      const snap = await productsRef.get();
-      const allProducts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      // 3. Search and filter products that belong to the detected category
-      const categoriesRef = db.collection("categories");
-      const catSnap = await categoriesRef.get();
-      const allCategories = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      // Find the category document that matches the detectedCategory name (case insensitive and space removed)
-      const matchedCategory = allCategories.find(c => 
-        c.name.toLowerCase().replace(/\s+/g, "") === detectedCategory.toLowerCase().replace(/\s+/g, "")
-      );
-
-      let matchedProducts = [];
-      if (matchedCategory) {
-        // Find products belonging to this category
-        matchedProducts = allProducts.filter(p => p.categoryId === matchedCategory.id);
-      } else {
-        // Fallback: search product name contains detectedCategory
-        matchedProducts = allProducts.filter(p => 
-          p.name.toLowerCase().includes(detectedCategory.toLowerCase())
-        );
-      }
-
+      const matches = (parsed.matches || []).filter((m) => menu.includes(m.name)).slice(0, 3);
+      const matchedProducts = matches.map((m) => allProducts.find((p) => p.name === m.name)).filter(Boolean);
+      const top = matches[0];
       return ApiResponse.success(res, {
-        detectedFoodName: `${detectedCategory} (Độ tin cậy: ${(confidence * 100).toFixed(0)}%)`,
-        matchedProducts
-      }, "Food recognized successfully by local AI");
-
+        detectedFoodName: top
+          ? `${parsed.dish || top.name} (Độ tin cậy: ${Math.round((top.confidence || 0) * 100)}%)`
+          : `${parsed.dish || "Không nhận ra món"} — chưa có trong thực đơn`,
+        matchedProducts,
+        engine: "gemini",
+      }, "Food recognized successfully");
     } catch (error) {
-      console.error("Local AI Error:", error);
+      console.error("[recognizeFood]", error.message);
       return ApiResponse.error(res, error, 400);
     }
   },

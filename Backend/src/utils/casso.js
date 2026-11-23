@@ -29,3 +29,17 @@ export function isValidCassoToken(headers, expected = process.env.CASSO_SECURE_T
   const received = headers?.["secure-token"] ?? headers?.["Secure-Token"];
   return received === expected;
 }
+
+/**
+ * Trạng thái ban đầu của đơn: MỌI đơn đều vào "Chờ xác nhận" (PENDING),
+ * cửa hàng/admin xác nhận thì mới chuyển sang ACCEPTED để tài xế nhận đơn.
+ * Thanh toán (paymentStatus) tách riêng khỏi trạng thái xử lý đơn.
+ */
+export function initialOrderStatus(_paymentMethod) {
+  return "PENDING";
+}
+
+/** Dữ liệu cập nhật khi xác nhận đã thanh toán: chỉ đổi paymentStatus, KHÔNG tự chấp nhận đơn. */
+export function paidUpdate(_order, now = new Date()) {
+  return { paymentStatus: "PAID", updatedAt: now };
+}

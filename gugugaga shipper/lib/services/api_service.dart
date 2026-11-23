@@ -3,7 +3,22 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 
+/// Phiên đăng nhập hết hạn hoặc token không còn hợp lệ (server trả 401).
+class SessionExpiredException implements Exception {
+  @override
+  String toString() => 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại';
+}
+
 class ApiService {
+  /// Gọi ngay sau mỗi request cần đăng nhập: 401 thì xoá token và báo cho màn hình đưa về đăng nhập.
+  Future<void> _check401(http.Response response) async {
+    if (response.statusCode != 401) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('driver');
+    throw SessionExpiredException();
+  }
+
   Future<Map<String, dynamic>> login(String phone, String password) async {
     final response = await http.post(
       Uri.parse('${AppConstants.baseUrl}/shipper/auth/login'),
@@ -32,6 +47,25 @@ class ApiService {
     throw Exception('Đăng nhập thất bại: ${response.body}');
   }
 
+  /// Xoá đơn đã xong khỏi lịch sử của tài xế (server chỉ gắn cờ, không xoá dữ liệu đơn).
+  Future<void> hideHistory({List<String>? ids, bool all = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token == null) throw Exception('Chưa đăng nhập');
+    final response = await http.post(
+      Uri.parse('${AppConstants.baseUrl}/shipper/orders/history/hide'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'ids': ids ?? [], 'all': all}),
+    );
+    await _check401(response);
+    if (response.statusCode != 200) {
+      throw Exception('Không xoá được lịch sử (${response.statusCode})');
+    }
+  }
+
   Future<List<dynamic>> getAssignedOrders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -46,6 +80,7 @@ class ApiService {
       },
     );
 
+    await _check401(response);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
@@ -71,6 +106,7 @@ class ApiService {
       },
     );
 
+    await _check401(response);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
@@ -94,8 +130,15 @@ class ApiService {
       },
     );
 
+    await _check401(response);
     if (response.statusCode != 200) {
-      throw Exception('Nhận đơn thất bại: ${response.body}');
+      // Lấy "message" từ JSON của server để hiển thị gọn thay vì cả chuỗi thô
+      String msg = 'Nhận đơn thất bại (${response.statusCode})';
+      try {
+        final body = json.decode(response.body);
+        if (body is Map && body['message'] != null) msg = body['message'].toString();
+      } catch (_) {}
+      throw Exception(msg);
     }
   }
 
@@ -114,6 +157,7 @@ class ApiService {
       body: json.encode({'status': status}),
     );
 
+    await _check401(response);
     if (response.statusCode != 200) {
        throw Exception('Cập nhật trạng thái thất bại: ${response.body}');
     }
@@ -155,6 +199,7 @@ class ApiService {
     final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
     final response = await http.Response.fromStream(streamedResponse);
     
+    await _check401(response);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
@@ -182,6 +227,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
     );
 
+    await _check401(response);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {

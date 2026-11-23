@@ -30,6 +30,8 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   String _accountNo = "1234567890";
   String _accountName = "GUGUGAGA FOOD STORE";
   bool _isLoadingConfig = true;
+  // Server chỉ cho xác nhận thủ công ở chế độ demo; khi tiền thật thì chỉ chờ hệ thống tự đối soát
+  bool _manualConfirm = true;
 
   @override
   void initState() {
@@ -56,6 +58,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
         _bankId = config['bankId'] ?? 'MB';
         _accountNo = config['accountNo'] ?? '1234567890';
         _accountName = config['accountName'] ?? 'NGUYEN GIA BAO';
+        _manualConfirm = config['manualConfirm'] != false;
         _isLoadingConfig = false;
       });
     } catch (e) {
@@ -329,7 +332,8 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Manual confirmation button
+                  // Nút xác nhận thủ công: chỉ hiện ở chế độ demo
+                  if (_manualConfirm)
                   ElevatedButton(
                     onPressed: _isChecking ? null : () => _checkPaymentStatus(isManual: true, force: true),
                     style: ElevatedButton.styleFrom(

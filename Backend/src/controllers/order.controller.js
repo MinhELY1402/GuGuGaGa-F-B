@@ -1,3 +1,4 @@
+import { simulatorEnabled } from "../utils/cardsim.js";
 import { isValidCassoToken } from "../utils/casso.js";
 import { orderService } from "../services/order.service.js";
 import { cartService } from "../services/cart.service.js";
@@ -108,6 +109,16 @@ export const orderController = {
       return ApiResponse.error(res, error);
     }
   },
+  /** POST /api/user/orders/:id/cancel — khách hủy đơn đang chờ xác nhận */
+  async cancelMyOrder(req, res) {
+    try {
+      const result = await orderService.cancelOrder(req.params.id, req.user.id);
+      return ApiResponse.success(res, result, "Đã hủy đơn hàng");
+    } catch (error) {
+      return ApiResponse.error(res, error, error.status || 400);
+    }
+  },
+
   async updateStatus(req, res) {
     try {
       const order = await orderService.updateStatus(
@@ -117,7 +128,7 @@ export const orderController = {
 
       return ApiResponse.success(res, order, "Cập nhật trạng thái thành công");
     } catch (error) {
-      return ApiResponse.error(res, error);
+      return ApiResponse.error(res, error, error.status || 400);
     }
   },
   async assignDriver(req, res) {
@@ -129,7 +140,7 @@ export const orderController = {
 
       return ApiResponse.success(res, order, "Gán tài xế thành công");
     } catch (error) {
-      return ApiResponse.error(res, error);
+      return ApiResponse.error(res, error, error.status || 400);
     }
   },
   getPaymentConfig: async (req, res) => {
@@ -142,6 +153,8 @@ export const orderController = {
         bankId,
         accountNo,
         accountName,
+        // App chỉ hiện nút "Tôi đã chuyển khoản" khi server cho phép xác nhận thủ công (chế độ demo)
+        manualConfirm: simulatorEnabled(),
       }, "Lấy cấu hình thanh toán thành công.");
     } catch (error) {
       console.error("[getPaymentConfig]", error);
@@ -152,11 +165,11 @@ export const orderController = {
     try {
       const orderId = req.params.id;
       const force = req.query.force === "true";
-      const result = await orderService.checkPayment(orderId, force);
+      const result = await orderService.checkPayment(orderId, req.user.id, force);
       return ApiResponse.success(res, result, "Kiểm tra thanh toán thành công.");
     } catch (error) {
-      console.error("[checkPayment]", error);
-      return ApiResponse.error(res, error);
+      console.error("[checkPayment]", error.message);
+      return ApiResponse.error(res, error, error.status || 400);
     }
   },
   cassoWebhook: async (req, res) => {

@@ -117,3 +117,18 @@ GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) chạy tr�
 | [docs/Major_Assignment_SPM_GuGuGaGa_v2.docx](docs/Major_Assignment_SPM_GuGuGaGa_v2.docx) | Báo cáo Major Assignment theo mẫu VKU |
 | [docs/09](docs/09_Evidence_Package_Checklist.md) | Gói bằng chứng kiểm toán (Evidence Package Checklist) |
 | [docs/word/](docs/word/) | Bản Word của các tài liệu trên. Xuất lại: `bash tools/md2docx/export-all.sh` |
+
+## Chạy server demo trên máy cá nhân (link công khai cố định)
+
+Dùng Firestore Emulator (không cần tài khoản Firebase) và **Tailscale Funnel** để có link HTTPS cố định
+(dạng `https://<máy>.<tailnet>.ts.net`), không đổi khi khởi động lại.
+
+1. Cài và đăng nhập Tailscale: `sudo systemctl enable --now tailscaled && sudo tailscale up`
+2. Cho phép Funnel khi được hỏi (trang quản trị Tailscale), và `sudo tailscale set --operator=$USER`
+3. Cài service: `bash scripts/install-demo-services.sh` — tạo `gugugaga-emulator`, `gugugaga-backend`,
+   bật `tailscale funnel` cho cổng 5000 và lưu dữ liệu emulator mỗi 5 phút.
+4. Link công khai nằm ở `.demo-data/current-url.txt`; kiểm tra `<link>/health`.
+
+Lưu ý: máy phải đang bật và có mạng. Muốn tự chạy cả khi chưa đăng nhập máy: `sudo loginctl enable-linger $USER`.
+Gói Tailscale miễn phí chỉ dành cho mục đích phi thương mại, băng thông Funnel có giới hạn.
+`scripts/serve-demo.sh` (Cloudflare Quick Tunnel, link đổi mỗi lần chạy) vẫn dùng được khi không có Tailscale.

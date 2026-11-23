@@ -8,6 +8,7 @@ import routerAdmin from "./routes/admin.route.js";
 import routerShipper from "./routes/shipper.route.js";
 import routerPublic from "./routes/public.route.js";
 import routerAI from "./routes/ai.route.js";
+import routerPayment from "./routes/payment.route.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use("/api/user", routerUser);
 app.use("/api/shipper", routerShipper);
 app.use("/api", routerPublic);
 app.use("/api/ai", routerAI);
+app.use("/api/payment", routerPayment);
 
 app.get("/", (req, res) => {
   res.send("API is running...");
