@@ -146,6 +146,23 @@ Thử 2 APK trên điện thoại Android thật, kết nối server demo qua Cl
 
 Chi tiết: `00_Project_History.md` mục 5. Người thử, thiết bị và danh sách luồng đã chạy: [CẦN BỔ SUNG].
 
+### 6.5. Cập nhật kiểm thử 22–23/11/2026: luồng đơn, thanh toán và điều phối tài xế
+| Bộ kiểm thử | Kết quả |
+|---|---|
+| Backend `npm test` (gồm luồng trạng thái đơn, điều phối tài xế, bảo vệ thanh toán, thanh toán thẻ mô phỏng, kiểm tra dữ liệu tài xế) | **80/80 pass** |
+| Flutter `test` — app khách (màn thanh toán thẻ/QR, mô hình đơn, Trợ giúp) | **11/11 pass** |
+| Admin `npm run build` | Build thành công |
+
+Các trường hợp được thử trên API thật (backend + Firestore Emulator):
+- Ba tài xế bấm nhận cùng một đơn đồng thời: **một người nhận được**, hai người nhận thông báo đã có tài xế (R02).
+- Khách gọi `check-payment?force=true` trên đơn chưa trả: trước khi sửa đơn bị ghi đã thanh toán (R13); sau khi sửa, ở chế độ tiền thật bị từ chối (403) và khách khác không gọi được lên đơn của người khác.
+- Admin xác nhận đơn online chưa trả, đặt "Đang giao" không có tài xế, đổi trạng thái đơn đã hủy: đều bị chặn với câu giải thích (R14).
+- Đơn online quá hạn thanh toán tự hủy; đơn đã trả, đơn COD và đơn mới được giữ nguyên.
+
+**Kiểm thử trên điện thoại thật (23/11/2026):** một điện thoại Android chạy cả app khách, app tài xế, kèm trang admin trên Chromium. Luồng hoàn chỉnh: khách đặt và thanh toán thẻ test (OTP) → đơn Chờ xác nhận → admin thử xác nhận đơn chưa trả (bị từ chối) rồi đơn đã trả (thành công) → tài xế nhận, xem món, giao xong → khách xem đơn Đã giao. Toàn bộ được quay thành video demo (2 phút 33 giây).
+
+**Lỗi tìm thấy khi quay:** trang admin không hiển thị bất kỳ thông báo nào vì thiếu `<Toaster />` (đã sửa); app khách giữ địa chỉ server cũ và danh sách đơn không tự làm mới (chưa sửa, R21).
+
 ### 6.4. Tiêu chí nghiệm thu kỹ thuật
 | Tiêu chí | Ngưỡng | Kết quả |
 |---|---|---|
@@ -165,6 +182,9 @@ Chi tiết: `00_Project_History.md` mục 5. Người thử, thiết bị và da
   - R01–R06 từ giai đoạn ĐACN1.
   - Bổ sung R07–R10 cho giai đoạn QTDA: thời gian ngắn, model AI có thể chưa đạt ngưỡng, lộ token, lỗi thiếu route (đã xử lý).
   - Cập nhật 15/11: **R06 (lộ secret) đã xảy ra thật** với key Gemini ghi cứng trong code; thêm R11 (server demo trên máy cá nhân, đã gây mất dữ liệu một lần) và R12 (đăng nhập Google phụ thuộc SHA-1).
+  - Cập nhật 22–23/11: thêm R13–R21 sau khi thử API thật và thử trên điện thoại. **R13** (khách tự đánh dấu đã thanh toán) và **R14** (chuyển trạng thái đơn sai) đã xảy ra và đã sửa; R02 được kiểm chứng; **R18** (giới hạn đăng nhập), **R19** (PR chưa được review), **R21** còn mở.
+- **CR-02** (`06_Scope_Change_Control_Record.md`): cổng thanh toán thẻ/QR ngay trong app, là **cổng mô phỏng**, không xử lý tiền thật.
+- **CR-03** (`06_Scope_Change_Control_Record.md`): mọi đơn chờ cửa hàng xác nhận, khách tự hủy đơn, điều phối tài xế bằng giao dịch và lọc theo chi nhánh.
 - **CR-01** (`06_Scope_Change_Control_Record.md`):
   - Vấn đề: webhook Casso bị trễ.
   - Giải pháp: thêm endpoint `GET /api/user/orders/:id/check-payment`, app tự polling và có nút "Tôi đã chuyển khoản".

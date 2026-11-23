@@ -72,3 +72,10 @@ Tài liệu ghi lại tiến trình thực tế của sản phẩm và của rep
 ### 5.4. Kết quả
 - Backend: **22/22** test tự động pass (`npm test`). CI chạy backend test, build Admin, `flutter analyze` và `flutter test`.
 - Kiểm thử thủ công trên điện thoại Android: [CẦN BỔ SUNG: người thử, thiết bị, các luồng đã chạy được].
+
+### 22–23/11/2026: ổn định luồng đơn và thanh toán
+- Thanh toán thẻ và QR ngay trong app (cổng mô phỏng, CR-02); bốn đợt phát hành APK trên `v1.1.0-beta`.
+- Chạy thử API thật và trên điện thoại, phát hiện và sửa các lỗ hổng luồng đơn, thanh toán (CR-03, R13, R14).
+- Chuyển server demo sang Tailscale Funnel (link cố định) và service chạy lâu dài (R11).
+- Quay video demo trên điện thoại thật và Chromium. Merge PR #51–#55 vào `main` (tự merge, chưa có reviewer, R19).
+

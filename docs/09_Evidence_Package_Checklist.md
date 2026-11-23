@@ -142,3 +142,16 @@ Mỗi issue QTDA có label `type:`, `area:`, `priority:`, `moscow:`, `sp:` (stor
 | 5 | UAT có chữ ký; kiểm thử thủ công | 4 | #39, #49 |
 | 6 | Tự đánh giá theo Rubric | 5 | — |
 | 7 | Thu hồi key Gemini, bật branch protection, review PR | 4 | #45, #30, #50 |
+
+## G. BỔ SUNG BẰNG CHỨNG 22–23/11/2026
+
+| # | Bằng chứng | Nơi lưu | Liên quan |
+|---|---|---|---|
+| 1 | Video demo luồng đặt, xác nhận, nhận và giao đơn trên điện thoại thật (2 phút 33 giây) | [CẦN BỔ SUNG: link Drive. File gốc `~/Videos/GuGuGaGa-demo.mp4` trên máy nhóm trưởng kỹ thuật] | Báo cáo 4, CR-03 |
+| 2 | Kết quả `npm test` backend: 80/80 pass | Log CI hoặc ảnh chụp terminal | R02, R13, R14 |
+| 3 | PR #51–#55 vào `main` | GitHub Pull Requests | CR-02, CR-03 |
+| 4 | Release `v1.1.0-beta` (Khách hàng bản 10, Tài xế bản 8, kèm `SHA256SUMS.txt`) | GitHub Releases | UAT |
+| 5 | Sổ rủi ro cập nhật R13–R21 | `docs/04_Risk_Register_Evolution.md` | Báo cáo 3 |
+| 6 | Hồ sơ thay đổi CR-02 (mục 6) và CR-03 | `docs/06_Scope_Change_Control_Record.md` | Báo cáo 3 |
+| 7 | **Review thật cho PR #51–#55** (hiện tự merge) | Comment/Approve của thành viên khác trên từng PR | R19, issue #50 |
+

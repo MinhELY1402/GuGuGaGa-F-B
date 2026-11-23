@@ -71,6 +71,15 @@
 
 ---
 
+### SLIDE 7B: RỦI RO PHÁT HIỆN KHI KIỂM THỬ LUỒNG ĐƠN (R02, R13, R14)
+* **R02 — nhận đơn trùng (16 điểm đỏ):** nhận đơn bằng giao dịch Firestore. Đã thử ba tài xế bấm cùng lúc: chỉ một người nhận được.
+* **R13 — khách tự đánh dấu "đã thanh toán" (20 điểm đỏ):** phát hiện khi thử gọi API sai cách; đã sửa: chỉ chủ đơn gọi được, xác nhận thủ công chỉ ở chế độ demo.
+* **R14 — chuyển trạng thái đơn sai (16 điểm đỏ):** bảng chuyển trạng thái chung; đơn online chưa trả không xác nhận được.
+* **Bài học:** test cũ chỉ kiểm tra luồng đúng. Lỗi lộ ra khi chủ động thử trường hợp xấu. Backend hiện có 80 test tự động.
+* **Còn mở:** giới hạn số lần đăng nhập (R18), PR chưa được review (R19).
+
+---
+
 ### SLIDE 8: BÀI HỌC KINH NGHIỆM HÀNG ĐẦU (TOP LESSONS LEARNED)
 * **Thiết kế chịu lỗi cho dịch vụ bên thứ ba**: polling song song với webhook (CR-01); bản đồ và tra địa chỉ có nhiều tầng dự phòng (Mapbox → OpenStreetMap → toạ độ).
 * **Phải thử trên thiết bị thật**: CI chỉ chứng minh code build được, không chứng minh app chạy được.

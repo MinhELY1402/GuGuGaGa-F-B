@@ -119,3 +119,38 @@ Ban CCB quyết định bổ sung giải pháp kỹ thuật chịu lỗi đa t�
 - Thử trên điện thoại thật với APK build 5: [CẦN BỔ SUNG].
 
 **Tác động:** tiến độ thêm khoảng 0,5 ngày; chi phí 0 VNĐ. Rủi ro còn lại: cổng mô phỏng không chứng minh được tích hợp với cổng thanh toán thật; muốn dùng thật cần một cổng có tài khoản merchant (VNPay, PayOS...) và thay phần xử lý thẻ bằng trang/SDK của cổng đó.
+
+---
+
+## YÊU CẦU THAY ĐỔI: CR-03 — CỬA HÀNG XÁC NHẬN ĐƠN, KHÁCH TỰ HỦY, ĐIỀU PHỐI TÀI XẾ
+
+**Mã hồ sơ:** `CR-2026-GUGUGAGA-03`
+**Ngày khởi tạo:** 22/11/2026 (giai đoạn QTDA, sau CR-02)
+**Người đề xuất:** Trần Phan Minh Tiến (Technical Lead)
+**Trạng thái:** Đã thực hiện và merge vào `main` (PR #51–#55); **chờ CCB xác nhận** (chữ ký bên dưới)
+
+### 1. Lý do đề xuất
+- Khi thử trên điện thoại, đơn COD chuyển thẳng sang "Đã chấp nhận" nên tài xế nhận đơn khi cửa hàng chưa xác nhận; tab "Chờ xác nhận" của khách luôn trống với đơn đã thanh toán.
+- Khi chạy thử API thật, nhóm tìm ra các lỗ hổng luồng đơn và thanh toán (R13, R14 trong sổ rủi ro).
+- Nhiều người cùng thử bằng một tài khoản tài xế, dễ nhận trùng đơn.
+
+### 2. Nội dung thay đổi
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Trạng thái đầu của đơn | COD: Đã chấp nhận; online: Chờ xác nhận | **Mọi đơn** vào Chờ xác nhận; cửa hàng/admin xác nhận thì tài xế mới thấy |
+| Chuyển trạng thái | Tuỳ ý | Theo bảng chuyển trạng thái chung (admin, tài xế, khách) |
+| Đơn online chưa trả | Xác nhận được | Không xác nhận được; quá 30 phút tự hủy |
+| Khách hủy đơn | Không có | Khách hủy được khi còn Chờ xác nhận |
+| Nhận đơn | Đọc rồi ghi, có thể nhận trùng | Giao dịch Firestore; tab Mới lọc theo chi nhánh |
+| Tài khoản tài xế | Một tài khoản | Bốn tài khoản mẫu; admin tạo tài xế có kiểm tra dữ liệu |
+| `check-payment` | Ai có token cũng gọi được, `force` luôn chạy | Chỉ chủ đơn; `force` chỉ ở chế độ demo |
+
+### 3. Đánh giá tác động
+- **Phạm vi:** backend, trang admin, app khách, app tài xế; không thêm phân hệ mới.
+- **Tiến độ:** thực hiện trong 22–23/11, không làm trễ mốc nộp.
+- **Chất lượng:** backend 80 test tự động, kiểm chứng ba tài xế nhận đồng thời một đơn, quay video demo trên điện thoại thật.
+- **Hạn chế còn lại:** hủy đơn đã trả tiền chưa tự hoàn tiền (R17); khi demo có công tắc `AUTO_ACCEPT_DEMO` tự xác nhận sau 30 giây, mặc định tắt.
+
+### 4. Phê duyệt của CCB
+[CẦN BỔ SUNG: chữ ký Technical Lead, PM/QA và giảng viên nếu có]
+

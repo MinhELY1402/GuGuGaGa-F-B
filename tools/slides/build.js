@@ -265,6 +265,25 @@ async function icon(Comp, color = "FFFFFF", size = 256) {
   ], { x: 7.9, y: 4.7, w: 4.6, h: 1.3, fontSize: 16, color: C.background1, valign: "middle" });
   s.addNotes("Nói rõ với hội đồng: kịch bản UAT đã chuẩn bị, chưa có biên bản ký. Không trình bày kết quả khi chưa làm.");
 
+  // ===== 9B. Rủi ro phát hiện khi kiểm thử luồng đơn =====
+  s = pres.addSlide({ masterName: "CONTENT", sectionTitle: "Kết quả" });
+  s.addText("Rủi ro lộ ra khi chủ động thử trường hợp xấu", { placeholder: "title" });
+  [
+    [I.swap, "R02 · Nhận đơn trùng", "16 → 3", "Nhận đơn bằng giao dịch. Ba tài xế bấm cùng lúc: chỉ một người nhận được."],
+    [I.lock, "R13 · Tự đánh dấu đã trả", "20 → 5", "Khách gọi API xác nhận thủ công. Nay chỉ chủ đơn gọi được và chỉ ở chế độ demo."],
+    [I.gavel, "R14 · Trạng thái đơn sai", "16 → 4", "Bảng chuyển trạng thái chung. Đơn online chưa trả không xác nhận được."],
+  ].forEach(([ic, a, score, b], i) => {
+    const x = 0.6 + i * 4.15, y = 1.55;
+    card(s, x, y, 3.95, 3.6);
+    badge(s, ic, x + 0.3, y + 0.3);
+    txt(s, a, { x: x + 1.1, y: y + 0.3, w: 2.75, h: 0.6, fontSize: 17, bold: true, color: C.text2 });
+    txt(s, score, { x: x + 0.3, y: y + 1.05, w: 3.35, h: 0.6, fontSize: 28, bold: true, color: C.accent1 });
+    txt(s, b, { x: x + 0.3, y: y + 1.75, w: 3.4, h: 1.7, fontSize: 16 });
+  });
+  card(s, 0.6, 5.4, 12.3, 1.2, C.text2);
+  txt(s, "Test cũ chỉ kiểm tra luồng đúng. Backend hiện có 80 test tự động; còn mở: giới hạn đăng nhập (R18), PR chưa được review (R19).", { x: 0.9, y: 5.4, w: 11.7, h: 1.2, fontSize: 18, color: C.background1, valign: "middle" });
+  s.addNotes("Điểm số là mức rủi ro trước và sau biện pháp. R13 và R14 đã xảy ra thật khi nhóm thử API; R02 được kiểm chứng bằng ba tài xế bấm đồng thời. Nói rõ hai việc còn mở để hội đồng thấy nhóm không che giấu.");
+
   // ===== 10. Lessons =====
   s = pres.addSlide({ masterName: "CONTENT", sectionTitle: "Kết quả" });
   s.addText("Bốn bài học quản trị rút ra từ dự án", { placeholder: "title" });
@@ -286,16 +305,16 @@ async function icon(Comp, color = "FFFFFF", size = 256) {
   pres.addSection({ title: "Demo" });
   s = pres.addSlide({ masterName: "DARK", sectionTitle: "Demo" });
   s.addText("Live demo · 5 phút", { placeholder: "title" });
-  s.addText("2 điện thoại + 1 máy tính, server demo qua Cloudflare Tunnel", { placeholder: "body" });
-  [[I.phone, "Khách hàng", "Google login → chatbot → đặt đơn → \"Tôi đã chuyển khoản\""],
+  s.addText("2 điện thoại + 1 máy tính, server demo qua Tailscale Funnel (link cố định)", { placeholder: "body" });
+  [[I.phone, "Khách hàng", "Đặt đơn → thanh toán thẻ test (mô phỏng, OTP) → đơn Chờ xác nhận"],
    [I.moto, "Tài xế", "Nhận đơn → bản đồ Mapbox → quét AI đối soát → giao"],
-   [I.web, "Admin", "Dashboard doanh thu, đơn \"Đã giao hàng\""]].forEach(([ic, a, b], i) => {
+   [I.web, "Admin", "Xác nhận đơn (đơn chưa trả bị từ chối), xem trạng thái"]].forEach(([ic, a, b], i) => {
     const x = 0.8 + i * 4.0;
     badge(s, ic, x, 5.2, 0.6, C.accent1);
     txt(s, a, { x: x + 0.8, y: 5.15, w: 3.0, h: 0.4, fontSize: 18, bold: true, color: C.background1 });
     txt(s, b, { x: x + 0.8, y: 5.6, w: 3.0, h: 0.9, fontSize: 14, color: "F3C9B8" });
   });
-  s.addNotes("Bật serve-demo.sh trước giờ bảo vệ và nhập URL vào 2 app. Không demo quét món bằng camera vì AI Service chưa host. Sau demo: mời hội đồng đặt câu hỏi.");
+  s.addNotes("Server chạy bằng service (scripts/install-demo-services.sh) với link Tailscale Funnel cố định; tắt AUTO_ACCEPT_DEMO để admin xác nhận tay. Có video dự phòng. Không demo quét món bằng camera vì AI Service chưa host. Sau demo: mời hội đồng đặt câu hỏi.");
 
   await pres.writeFile({ fileName: OUT });
   await applyTheme(OUT, THEME);
