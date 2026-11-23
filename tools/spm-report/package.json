@@ -1,0 +1,9 @@
+{
+  "name": "gugugaga-spm-report",
+  "private": true,
+  "description": "Báo cáo Major Assignment (SPM) theo mẫu VKU. Chạy calc.py (cần matplotlib) để sinh data.json + hình, rồi build.js",
+  "scripts": {
+    "build": "node build.js out ../../docs/Major_Assignment_SPM_GuGuGaGa_v2.docx"
+  },
+  "dependencies": { "docx": "9.5.1" }
+}

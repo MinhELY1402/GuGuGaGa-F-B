@@ -1,0 +1,13 @@
+{
+  "name": "gugugaga-slides",
+  "private": true,
+  "description": "Slide bảo vệ đồ án (PPTX) — node build.js",
+  "scripts": { "build": "node build.js ../../docs/GuGuGaGa_Slide_Bao_Ve.pptx" },
+  "dependencies": {
+    "pptxgenjs": "3.12.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-icons": "5.4.0",
+    "sharp": "0.33.5"
+  }
+}

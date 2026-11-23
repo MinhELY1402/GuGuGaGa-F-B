@@ -70,7 +70,7 @@
 
 ### Gói 2: WBS 1.4.2 & 1.4.4 — Shipper Tiếp Nhận Đơn & Xác Nhận Thu COD
 * **Phân hệ**: Shipper Mobile App (`gugugaga shipper/lib/screens/`)
-* **Chủ trì**: Nguyễn Minh (Frontend) | **Phối hợp**: Trần Phan Minh Tiến (Tech Lead)
+* **Chủ trì**: Nguyễn Bảo Quang Minh (Frontend) | **Phối hợp**: Trần Phan Minh Tiến (Tech Lead)
 * **Thời gian ước tính**: 80 giờ (2 tuần) | **Phân cấp MoSCoW**: **Must-Have**
 * **Mô tả công việc**:
   1. Xây dựng danh sách đơn hàng sẵn sàng nhận theo chi nhánh.

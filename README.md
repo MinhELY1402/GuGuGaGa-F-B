@@ -7,7 +7,7 @@ Sản phẩm kế thừa từ Đồ án chuyên ngành 1 theo **Pathway 1** (xem
 |---|---|
 | Võ Nhật Huy | Project Lead / Scrum Master & QA Lead |
 | Trần Phan Minh Tiến | Technical Lead & System Architect |
-| Nguyễn Minh | Frontend Engineer (Flutter, React) |
+| Nguyễn Bảo Quang Minh | Frontend Engineer (Flutter, React) |
 | Nguyễn Gia Bảo | Backend & AI Engineer (Node.js, PyTorch) |
 
 ## Kiến trúc
@@ -33,8 +33,9 @@ Sản phẩm kế thừa từ Đồ án chuyên ngành 1 theo **Pathway 1** (xem
 ### Backend (cổng 5000)
 ```bash
 cd Backend
-cp .env.example .env          # điền JWT_SECRET, Firebase, Cloudinary, Casso...
+cp .env.example .env          # điền JWT_SECRET, Firebase, Cloudinary, Gemini, Casso... (xem chú thích trong file)
 # đặt serviceAccountKey.json (Firebase Admin SDK) theo FIREBASE_SERVICE_ACCOUNT_PATH
+# (hoặc chạy không cần service account: FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 — xem scripts/serve-demo.sh)
 npm install
 npm run seed                  # (tuỳ chọn) dữ liệu mẫu Firestore
 npm run dev
@@ -48,7 +49,8 @@ cd Admin && npm install && npm run dev     # gọi API tại http://localhost:50
 ### Mobile apps
 ```bash
 cd gugugaga            # hoặc "gugugaga shipper"
-# tạo file .env: BASE_URL=http://10.0.2.2:5000/api, MAPBOX_ACCESS_TOKEN=..., OPENCAGE_API_KEY=...
+# tạo file .env: BASE_URL=http://10.0.2.2:5000/api, MAPBOX_ACCESS_TOKEN=pk.... (token public, để trống thì dùng OpenStreetMap)
+# KHÔNG đặt key bí mật (Gemini, OpenCage...) vào .env của app: file này được đóng gói vào APK
 flutter pub get && flutter run
 ```
 
@@ -60,10 +62,29 @@ python app.py                                   # tự fallback ImageNet nếu c
 python evaluate.py --data-dir <dataset>         # đo Top-1/Top-3/latency → models/eval_report.json
 ```
 
+## Bản chạy thử (APK) cho người khác
+
+- **Tải APK:** [Releases → v1.1.0-beta](https://github.com/MinhELY1402/GuGuGaGa-F-B/releases/tag/v1.1.0-beta): `GuGuGaGa-KhachHang-*.apk`, `GuGuGaGa-TaiXe-*.apk` (Android 7.0+, arm64).
+- **Bật server demo trên máy nhóm** (Firestore Emulator + Backend + Cloudflare Quick Tunnel):
+  ```bash
+  # Cần Node 20+, JDK 21+, cloudflared. Dữ liệu demo lưu ở .demo-data/ (không commit).
+  bash scripts/serve-demo.sh                 # in ra URL https://xxxx.trycloudflare.com
+  # Hoặc chạy nền, không phụ thuộc terminal:
+  systemd-run --user --unit=gugugaga-demo --property=KillSignal=SIGINT --property=KillMode=mixed \
+    --property=TimeoutStopSec=120 --working-directory="$PWD" --setenv=PATH="$HOME/.local/bin:$PATH" \
+    bash scripts/serve-demo.sh
+  cat .demo-data/current-url.txt             # URL hiện tại
+  systemctl --user stop gugugaga-demo        # tắt (dữ liệu được lưu trước khi tắt)
+  ```
+- **URL tunnel đổi mỗi lần bật lại.** Trong app: lần đầu mở sẽ hỏi "Địa chỉ server"; muốn đổi sau đó thì **nhấn giữ chữ "GuGuGaGa"** ở màn hình đăng nhập.
+- **Thanh toán thử nghiệm trong app:** chọn "Thanh toán online" khi đặt hàng. Cổng này là **mô phỏng** (không trừ tiền thật), bật bằng `PAYMENT_SIMULATOR=1` trong `Backend/.env`. Thẻ test: `4111 1111 1111 1111`, hạn `12/30`, CVV `123`, OTP `123456`; thẻ bị từ chối: `4000 0000 0000 0002`. Mọi số thẻ khác bị chặn. Xem CR-02 trong `docs/06`.
+- **Tài khoản mẫu** (mật khẩu `123456`): khách `0912345671`, tài xế `0911111111`, admin `0900000000`.
+- **Đăng nhập Google (Android)** dùng project Firebase `guga-27d3f`. APK phải được ký bằng khoá có SHA-1 đã thêm vào Firebase (Project settings → app `com.example.GuGuGaGa` → Add fingerprint); build trên máy khác cần thêm SHA-1 của máy đó.
+
 ## Kiểm thử & CI
 
 ```bash
-cd Backend && npm test        # unit test + API test (supertest), không cần Firestore thật
+cd Backend && npm test        # 22 test: API (supertest), phân quyền, Casso, AI chat, nhận dạng ảnh — không cần Firestore thật
 ```
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) chạy trên mọi PR vào `develop`/`main`:
@@ -92,6 +113,10 @@ GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) chạy tr�
 | [docs/06](docs/06_Scope_Change_Control_Record.md) | Kiểm soát thay đổi CR-01 |
 | [docs/07](docs/07_Stakeholder_Acceptance_Signoff.md) | Kịch bản & biên bản UAT |
 | [docs/08](docs/08_Presentation_Slide_Deck.md) | Slide bảo vệ |
+| [docs/GuGuGaGa_Slide_Bao_Ve.pptx](docs/GuGuGaGa_Slide_Bao_Ve.pptx) | Slide bảo vệ (PowerPoint, có ghi chú người nói) |
+| [docs/Major_Assignment_SPM_GuGuGaGa_v2.docx](docs/Major_Assignment_SPM_GuGuGaGa_v2.docx) | Báo cáo Major Assignment theo mẫu VKU |
+| [docs/09](docs/09_Evidence_Package_Checklist.md) | Gói bằng chứng kiểm toán (Evidence Package Checklist) |
+| [docs/word/](docs/word/) | Bản Word của các tài liệu trên. Xuất lại: `bash tools/md2docx/export-all.sh` |
 
 ## Chạy server demo trên máy cá nhân (link công khai cố định)
 
